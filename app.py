@@ -3,10 +3,6 @@ import pandas as pd
 import re
 import joblib
 import matplotlib.pyplot as plt
-from nltk.tokenize import word_tokenize  # Add this import
-import nltk
-nltk.download('punkt')
-nltk.download('stopwords')
 
 
 
@@ -14,11 +10,6 @@ nltk.download('stopwords')
 def clean_text(text):
     text = re.sub(r'[^a-zA-Z\s]', '', text)  # Menghapus angka dan karakter non-huruf
     return text
-
-# Fungsi Tokenisasi
-def tokenize_text(text):
-    tokens = word_tokenize(text)
-    return tokens
 
 # Fungsi Normalisasi (Contoh)
 def normalize_negation(text):
@@ -108,7 +99,6 @@ def preprocess_text(text, stopword_model, stemmer_model):
     text = clean_text(text)
     text = normalize_negation(text)  # Normalisasi
     text = stopword_model.remove(text)  # Stopword Removal
-    tokens = tokenize_text(text)  # Tokenisasi
     text = stemmer_model.stem(text)  # Stemming
     return text
 
