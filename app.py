@@ -128,7 +128,7 @@ def main():
         
         if st.button("Prediksi"):
             # Preprocessing
-            processed_text = preprocess_text(user_input, normalizer_model, stopword_model, stemmer_model)
+            processed_text = preprocess_text(user_input, stopword_model, stemmer_model)
             
             # TF-IDF untuk aspek
             aspect_vectorized = tfidf_vectorizer_aspek.transform([processed_text])
@@ -169,7 +169,7 @@ def main():
             
             for index, row in df.iterrows():
                 ulasan = row['ulasan']
-                processed_text = preprocess_text(ulasan, normalizer_model, stopword_model, stemmer_model)
+                processed_text = preprocess_text(ulasan, stopword_model, stemmer_model)
                 
                 # TF-IDF untuk aspek
                 aspect_vectorized = tfidf_vectorizer_aspek.transform([processed_text])
