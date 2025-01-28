@@ -124,14 +124,6 @@ def main():
     st.title("Sistem Prediksi Aspek dan Sentimen dengan Random Forest")
     st.markdown("### Sistem ini memprediksi:\n- **Aspek**: Fasilitas, Pelayanan, Masakan\n- **Sentimen**: Positif atau Negatif")
     
-    # Dictionary untuk menyimpan hasil analisis
-    results = {
-        "Fasilitas": {"Positif": 0, "Negatif": 0},
-        "Pelayanan": {"Positif": 0, "Negatif": 0},
-        "Masakan": {"Positif": 0, "Negatif": 0},
-        "Aspek Tidak Dikenali": 0
-    }
-    
     # Input teks
     st.subheader("Input Teks Tunggal")
     user_input = st.text_area("Masukkan Teks", "")
@@ -146,38 +138,15 @@ def main():
             if predicted_aspect == "tidak_dikenali":
                 st.write("**Aspek**: Tidak Dikenali")
                 st.write("**Sentimen**: -")
-                results["Aspek Tidak Dikenali"] += 1
             else:
                 sentiment_vectorized = tfidf_sentimen.transform([processed_text])
                 predicted_sentiment = rf_sentimen_model.predict(sentiment_vectorized)[0]
                 st.write(f"**Aspek**: {predicted_aspect.capitalize()}")
                 st.write(f"**Sentimen**: {predicted_sentiment.capitalize()}")
-                results[predicted_aspect.capitalize()][predicted_sentiment.capitalize()] += 1
-
-            # Tampilkan hasil dalam tabel
-            st.subheader("Hasil Analisis")
-            hasil_df = pd.DataFrame({
-                aspect: {
-                    "Positif": data["Positif"],
-                    "Negatif": data["Negatif"]
-                }
-                for aspect, data in results.items()
-                if aspect != "Aspek Tidak Dikenali"
-            }).T
-            
-            # Tampilkan visualisasi terlebih dahulu sebelum download
+                
+            # Tampilkan visualisasi sebelum download
             st.subheader("Visualisasi Sentimen per Aspek")
-            create_visualization(results)
-
-            # Download Excel
-            st.subheader("Download Hasil")
-            excel_file = create_excel_download(hasil_df)
-            st.download_button(
-                label="📥 Download Hasil Analisis (Excel)",
-                data=excel_file,
-                file_name="hasil_analisis_teks.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
+            create_wordcloud(pd.DataFrame({"ulasan": [user_input]}), 'ulasan')
 
     # Input File Excel
     st.subheader("Input File Excel")
@@ -214,13 +183,11 @@ def main():
                 if predicted_aspect == "tidak_dikenali":
                     df.at[index, "Aspek"] = "Tidak Dikenali"
                     df.at[index, "Sentimen"] = "-"
-                    results["Aspek Tidak Dikenali"] += 1
                 else:
                     sentiment_vectorized = tfidf_sentimen.transform([processed_text])
                     predicted_sentiment = rf_sentimen_model.predict(sentiment_vectorized)[0]
                     df.at[index, "Aspek"] = predicted_aspect.capitalize()
                     df.at[index, "Sentimen"] = predicted_sentiment.capitalize()
-                    results[predicted_aspect.capitalize()][predicted_sentiment.capitalize()] += 1
                 
                 progress = (index + 1) / total_rows
                 progress_bar.progress(progress)
@@ -229,32 +196,19 @@ def main():
             progress_bar.progress(100)
             status_text.text('Pemrosesan selesai!')
 
-            # Tampilkan hasil
+            # Tampilkan hasil analisis
             st.subheader("Hasil Analisis")
-            hasil_df = pd.DataFrame({
-                aspect: {
-                    "Positif": data["Positif"],
-                    "Negatif": data["Negatif"]
-                }
-                for aspect, data in results.items()
-                if aspect != "Aspek Tidak Dikenali"
-            }).T
-            st.dataframe(hasil_df)
+            st.dataframe(df)
             
             # Tampilkan visualisasi terlebih dahulu sebelum download
             st.subheader("Visualisasi Sentimen per Aspek")
-            create_visualization(results)
-            
-            # Preview data hasil prediksi
-            st.subheader("Preview Hasil Prediksi")
-            st.dataframe(df.head())
+            create_wordcloud(df, 'ulasan')
             
             # Download hasil lengkap
             st.subheader("Download Hasil")
             output = BytesIO()
             with pd.ExcelWriter(output, engine='openpyxl') as writer:
                 df.to_excel(writer, index=False, sheet_name='Hasil Prediksi')
-                hasil_df.to_excel(writer, sheet_name='Ringkasan')
             output.seek(0)
             
             st.download_button(
@@ -266,6 +220,7 @@ def main():
 
         except Exception as e:
             st.error(f"Terjadi kesalahan saat memproses file Excel: {e}")
+
 
 
 if __name__ == "__main__":
