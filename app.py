@@ -3,6 +3,10 @@ import pandas as pd
 import re
 import joblib
 import matplotlib.pyplot as plt
+from nltk.tokenize import word_tokenize  # Add this import
+
+# Other functions remain the same...
+
 
 # Fungsi untuk membersihkan teks
 def clean_text(text):
