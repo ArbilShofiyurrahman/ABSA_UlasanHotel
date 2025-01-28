@@ -4,8 +4,9 @@ import re
 import joblib
 import matplotlib.pyplot as plt
 from nltk.tokenize import word_tokenize  # Add this import
+import nltk
+nltk.download('punkt')
 
-# Other functions remain the same...
 
 
 # Fungsi untuk membersihkan teks
