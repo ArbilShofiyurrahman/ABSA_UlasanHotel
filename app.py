@@ -4,16 +4,16 @@ import re
 import joblib
 import matplotlib.pyplot as plt
 
+# Fungsi untuk membersihkan teks
 def clean_text(text):
-# Menghapus angka, tanda baca, dan karakter spesial
-    text = re.sub(r'[^a-zA-Z\s]', '', text)
+    text = re.sub(r'[^a-zA-Z\s]', '', text)  # Menghapus angka dan karakter non-huruf
     return text
 
 # Fungsi Tokenisasi
 def tokenize_text(text):
-    # Menggunakan nltk untuk tokenisasi
     tokens = word_tokenize(text)
     return tokens
+
 # Fungsi Normalisasi (Contoh)
 def normalize_negation(text):
     negation_patterns = {
@@ -99,10 +99,10 @@ def normalize_negation(text):
 # Fungsi Preprocessing
 def preprocess_text(text, stopword_model, stemmer_model):
     text = text.lower()  # Casefolding
-    text = clean_text(text) 
-    text = normalize_negation(text)   # Normalisasi
+    text = clean_text(text)
+    text = normalize_negation(text)  # Normalisasi
     text = stopword_model.remove(text)  # Stopword Removal
-    tokens = tokenize_text(text) 
+    tokens = tokenize_text(text)  # Tokenisasi
     text = stemmer_model.stem(text)  # Stemming
     return text
 
