@@ -3,6 +3,9 @@ import pandas as pd
 import re
 import joblib
 import matplotlib.pyplot as plt
+import io
+import numpy as np
+from io import BytesIO
 
 # Fungsi untuk membersihkan teks
 def clean_text(text):
