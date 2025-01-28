@@ -144,54 +144,48 @@ def main():
                     st.write(f"**Sentimen**: {predicted_sentiment.capitalize()}")
 
     elif input_option == "File Excel":
-        uploaded_file = st.file_uploader("Upload file Excel", type=["xlsx"])
-        if uploaded_file is not None:
-            try:
-                df = pd.read_excel(uploaded_file)
-                if 'ulasan' not in df.columns:
-                    st.error("File Excel harus memiliki kolom 'ulasan'.")
-                    return
-                
-                results = {
-                    "Fasilitas": {"Positif": 0, "Negatif": 0},
-                    "Pelayanan": {"Positif": 0, "Negatif": 0},
-                    "Masakan": {"Positif": 0, "Negatif": 0},
-                    "Aspek Tidak Dikenali": 0
-                }
-                
-                for index, row in df.iterrows():
-                    ulasan = row['ulasan']
-                    processed_text = preprocess_text(ulasan, stopword_model, stemmer_model)
-                    aspect_vectorized = tfidf_aspek.transform([processed_text])
-                    predicted_aspect = rf_aspek_model.predict(aspect_vectorized)[0]
-                    
-                    if predicted_aspect == "tidak_dikenali":
-                        results["Aspek Tidak Dikenali"] += 1
-                    else:
-                        sentiment_vectorized = tfidf_sentimen.transform([processed_text])
-                        predicted_sentiment = rf_sentimen_model.predict(sentiment_vectorized)[0]
-                        results[predicted_aspect.capitalize()][predicted_sentiment.capitalize()] += 1
-                
-                # Tampilkan pie chart secara horizontal
-                st.write("Distribusi Sentimen per Aspek:")
-                cols = st.columns(len(results) - 1)  # Menghilangkan "Aspek Tidak Dikenali"
-                
-                for idx, (aspek, nilai) in enumerate(results.items()):
-                    if aspek != "Aspek Tidak Dikenali":
-                        labels = ["Positif", "Negatif"]
-                        sizes = [nilai["Positif"], nilai["Negatif"]]
-                        colors = ["blue", "red"]
-
-
-                        fig, ax = plt.subplots()
-                        ax.pie(sizes, labels=labels, autopct='%1.1f%%', colors=colors, startangle=90)
-                        ax.set_title(f"Sentimen {aspek}")
-
-                        with cols[idx]:
-                            st.pyplot(fig)
+    uploaded_file = st.file_uploader("Upload file Excel", type=["xlsx"])
+    if uploaded_file is not None:
+        try:
+            df = pd.read_excel(uploaded_file)
+            if 'ulasan' not in df.columns:
+                st.error("File Excel harus memiliki kolom 'ulasan'.")
+                return
             
-            except Exception as e:
-                st.error(f"Terjadi kesalahan saat memproses file Excel: {e}")
+            df["Aspek"] = ""
+            df["Sentimen"] = ""
+
+            for index, row in df.iterrows():
+                ulasan = row['ulasan']
+                processed_text = preprocess_text(ulasan, stopword_model, stemmer_model)
+                aspect_vectorized = tfidf_aspek.transform([processed_text])
+                predicted_aspect = rf_aspek_model.predict(aspect_vectorized)[0]
+
+                if predicted_aspect == "tidak_dikenali":
+                    df.at[index, "Aspek"] = "Tidak Dikenali"
+                    df.at[index, "Sentimen"] = "-"
+                else:
+                    sentiment_vectorized = tfidf_sentimen.transform([processed_text])
+                    predicted_sentiment = rf_sentimen_model.predict(sentiment_vectorized)[0]
+                    df.at[index, "Aspek"] = predicted_aspect.capitalize()
+                    df.at[index, "Sentimen"] = predicted_sentiment.capitalize()
+            
+            # Simpan ke file Excel
+            output_file = "hasil_prediksi.xlsx"
+            df.to_excel(output_file, index=False)
+
+            # Tampilkan tombol download
+            with open(output_file, "rb") as f:
+                st.download_button(
+                    label="📥 Download Hasil Prediksi",
+                    data=f,
+                    file_name="hasil_prediksi.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
+        
+        except Exception as e:
+            st.error(f"Terjadi kesalahan saat memproses file Excel: {e}")
+
 
 if __name__ == "__main__":
     main()
