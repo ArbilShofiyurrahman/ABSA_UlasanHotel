@@ -3,32 +3,22 @@ import pandas as pd
 import re
 import joblib
 import matplotlib.pyplot as plt
-import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
 
 # Fungsi Preprocessing
-def preprocess_text(text):
-    text = text.lower()  # Ubah ke huruf kecil
-    text = re.sub(r'[^a-zA-Z\s]', '', text)  # Hilangkan karakter non-alfabet
-    text = re.sub(r'\s+', ' ', text)  # Hilangkan spasi berlebih
+def preprocess_text(text, normalizer_model, stopword_model, stemmer_model):
+    text = text.lower()  # Casefolding
+    text = normalizer_model(text)  # Normalisasi
+    text = stopword_model.remove(text)  # Stopword Removal
+    text = stemmer_model.stem(text)  # Stemming
     return text
 
 # Memuat Model
-normalizer_model = joblib.load('normalizer_model.pkl')
-stopword_model = joblib.load('stopword_model.pkl')
-stemmer_model = joblib.load('stemmer_model.pkl')
-vectorizers = {
-    "aspek": joblib.load('tfidfaspek.pkl'),
-    "fasilitas": joblib.load('tfidf_vectorizer_fasilitas.pkl'),
-    "pelayanan": joblib.load('tfidf_vectorizer_pelayanan.pkl'),
-    "masakan": joblib.load('tfidf_vectorizer_masakan.pkl')
-}
-aspect_model = joblib.load('aspek.pkl')
-sentiment_models = {
-    "fasilitas": joblib.load('model_random_forest_fasilitas.pkl'),
-    "pelayanan": joblib.load('model_random_forest_pelayanan.pkl'),
-    "masakan": joblib.load('model_random_forest_masakan.pkl')
-}
+normalizer_model = joblib.load('normalisasi_pld.pkl')
+stopword_model = joblib.load('stopword_remover_model_pld.pkl')
+stemmer_model = joblib.load('stemmer_model_pld.pkl')
+tfidf_vectorizer_aspek = joblib.load('tfidf_vectorizer_aspek_pld.pkl')
+rf_aspek_model = joblib.load('rf_aspek_model_pld.pkl')
+rf_sentimen_model = joblib.load('rf_sentimen_model_pld.pkl')
 
 # Aplikasi Streamlit
 def main():
@@ -44,26 +34,25 @@ def main():
         
         if st.button("Prediksi"):
             # Preprocessing
-            processed_text = preprocess_text(user_input)
+            processed_text = preprocess_text(user_input, normalizer_model, stopword_model, stemmer_model)
+            
+            # TF-IDF untuk aspek
+            aspect_vectorized = tfidf_vectorizer_aspek.transform([processed_text])
             
             # Prediksi Aspek
-            aspect_vectorized = vectorizers["aspek"].transform([processed_text])
-            predicted_aspect = aspect_model.predict(aspect_vectorized)[0]
+            predicted_aspect = rf_aspek_model.predict(aspect_vectorized)[0]
             
-            # Validasi aspek
-            if predicted_aspect not in vectorizers:
-                st.error("Aspek tidak dikenali.")
-                return
-            
-            # Prediksi Sentimen
-            sentiment_vectorizer = vectorizers[predicted_aspect]
-            sentiment_model = sentiment_models[predicted_aspect]
-            sentiment_vectorized = sentiment_vectorizer.transform([processed_text])
-            predicted_sentiment = sentiment_model.predict(sentiment_vectorized)[0]
-            
-            # Menampilkan hasil prediksi
-            st.write(f"**Aspek**: {predicted_aspect.capitalize()}")
-            st.write(f"**Sentimen**: {predicted_sentiment.capitalize()}")
+            if predicted_aspect == "tidak_dikenali":
+                st.write("**Aspek**: Tidak Dikenali")
+                st.write("**Sentimen**: -")
+            else:
+                # Prediksi Sentimen
+                sentiment_vectorized = tfidf_vectorizer_aspek.transform([processed_text])
+                predicted_sentiment = rf_sentimen_model.predict(sentiment_vectorized)[0]
+                
+                # Menampilkan hasil prediksi
+                st.write(f"**Aspek**: {predicted_aspect.capitalize()}")
+                st.write(f"**Sentimen**: {predicted_sentiment.capitalize()}")
 
     elif input_option == "File Excel":
         # Upload file Excel
@@ -86,28 +75,27 @@ def main():
             
             for index, row in df.iterrows():
                 ulasan = row['ulasan']
-                processed_text = preprocess_text(ulasan)
+                processed_text = preprocess_text(ulasan, normalizer_model, stopword_model, stemmer_model)
+                
+                # TF-IDF untuk aspek
+                aspect_vectorized = tfidf_vectorizer_aspek.transform([processed_text])
                 
                 # Prediksi Aspek
-                aspect_vectorized = vectorizers["aspek"].transform([processed_text])
-                predicted_aspect = aspect_model.predict(aspect_vectorized)[0]
+                predicted_aspect = rf_aspek_model.predict(aspect_vectorized)[0]
                 
-                if predicted_aspect not in vectorizers:
+                if predicted_aspect == "tidak_dikenali":
                     results["Aspek Tidak Dikenali"] += 1
-                    continue  # Jika aspek tidak dikenali, lanjutkan ke ulasan berikutnya
-                
-                # Prediksi Sentimen
-                sentiment_vectorizer = vectorizers[predicted_aspect]
-                sentiment_model = sentiment_models[predicted_aspect]
-                sentiment_vectorized = sentiment_vectorizer.transform([processed_text])
-                predicted_sentiment = sentiment_model.predict(sentiment_vectorized)[0]
-                
-                if predicted_aspect == "fasilitas":
-                    results["Fasilitas"][predicted_sentiment.capitalize()] += 1
-                elif predicted_aspect == "pelayanan":
-                    results["Pelayanan"][predicted_sentiment.capitalize()] += 1
-                elif predicted_aspect == "masakan":
-                    results["Masakan"][predicted_sentiment.capitalize()] += 1
+                else:
+                    # Prediksi Sentimen
+                    sentiment_vectorized = tfidf_vectorizer_aspek.transform([processed_text])
+                    predicted_sentiment = rf_sentimen_model.predict(sentiment_vectorized)[0]
+                    
+                    if predicted_aspect == "fasilitas":
+                        results["Fasilitas"][predicted_sentiment.capitalize()] += 1
+                    elif predicted_aspect == "pelayanan":
+                        results["Pelayanan"][predicted_sentiment.capitalize()] += 1
+                    elif predicted_aspect == "masakan":
+                        results["Masakan"][predicted_sentiment.capitalize()] += 1
             
             # Menampilkan hasil prediksi dalam bentuk diagram lingkaran
             aspect_names = ["Aspek Tidak Dikenali", "Fasilitas", "Pelayanan", "Masakan"]
