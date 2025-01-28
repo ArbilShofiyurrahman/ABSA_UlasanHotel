@@ -179,9 +179,37 @@ def main():
                 # Tampilkan hasil
                 st.write("Hasil Prediksi:")
                 st.write(results)
-            
+                 # Menampilkan Pie Chart dengan Matplotlib
+                for aspek, nilai in results.items():
+                    if aspek != "Aspek Tidak Dikenali":
+                        labels = ["Positif", "Negatif"]
+                        sizes = [nilai["Positif"], nilai["Negatif"]]
+                        colors = ["#66b3ff", "#ff6666"]
+
+                        fig, ax = plt.subplots()
+                        ax.pie(sizes, labels=labels, autopct='%1.1f%%', colors=colors, startangle=90)
+                        ax.set_title(f"Sentimen {aspek}")
+
+                        st.pyplot(fig)
+
+                # Menampilkan Pie Chart dengan Plotly
+                for aspek, nilai in results.items():
+                    if aspek != "Aspek Tidak Dikenali":
+                        df_chart = pd.DataFrame({
+                            "Kategori": ["Positif", "Negatif"],
+                            "Jumlah": [nilai["Positif"], nilai["Negatif"]]
+                        })
+
+                        fig = px.pie(df_chart, names="Kategori", values="Jumlah", title=f"Sentimen {aspek}", 
+                                     color_discrete_sequence=["#66b3ff", "#ff6666"])
+
+                        st.plotly_chart(fig)
+
             except Exception as e:
                 st.error(f"Terjadi kesalahan saat memproses file Excel: {e}")
+
+            
+          
 
 if __name__ == "__main__":
     main()
