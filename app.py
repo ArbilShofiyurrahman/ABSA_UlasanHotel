@@ -155,25 +155,33 @@ def main():
                 if 'ulasan' not in df.columns:
                     st.error("File Excel harus memiliki kolom 'ulasan'.")
                     return
-                
-               
-                for index, row in df.iterrows():
+
+                # Inisialisasi hasil prediksi
+                results = {
+                    "Fasilitas": {"Positif": 0, "Negatif": 0},
+                    "Pelayanan": {"Positif": 0, "Negatif": 0},
+                    "Masakan": {"Positif": 0, "Negatif": 0},
+                    "Aspek Tidak Dikenali": 0
+                }
+
+                for _, row in df.iterrows():
                     ulasan = row['ulasan']
                     processed_text = preprocess_text(ulasan, stopword_model, stemmer_model)
                     aspect_vectorized = tfidf_aspek.transform([processed_text])
                     predicted_aspect = rf_aspek_model.predict(aspect_vectorized)[0]
-                    
+
                     if predicted_aspect == "tidak_dikenali":
                         results["Aspek Tidak Dikenali"] += 1
                     else:
                         sentiment_vectorized = tfidf_sentimen.transform([processed_text])
                         predicted_sentiment = rf_sentimen_model.predict(sentiment_vectorized)[0]
                         results[predicted_aspect.capitalize()][predicted_sentiment.capitalize()] += 1
-                
+
                 # Tampilkan hasil
                 st.write("Hasil Prediksi:")
                 st.write(results)
-                 # Menampilkan Pie Chart dengan Matplotlib
+
+                # Menampilkan Pie Chart dengan Matplotlib
                 for aspek, nilai in results.items():
                     if aspek != "Aspek Tidak Dikenali":
                         labels = ["Positif", "Negatif"]
@@ -194,16 +202,13 @@ def main():
                             "Jumlah": [nilai["Positif"], nilai["Negatif"]]
                         })
 
-                        fig = px.pie(df_chart, names="Kategori", values="Jumlah", title=f"Sentimen {aspek}", 
+                        fig = px.pie(df_chart, names="Kategori", values="Jumlah", title=f"Sentimen {aspek}",
                                      color_discrete_sequence=["#66b3ff", "#ff6666"])
 
                         st.plotly_chart(fig)
 
             except Exception as e:
                 st.error(f"Terjadi kesalahan saat memproses file Excel: {e}")
-
-            
-          
 
 if __name__ == "__main__":
     main()
