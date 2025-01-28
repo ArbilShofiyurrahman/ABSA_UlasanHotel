@@ -119,35 +119,6 @@ except Exception as e:
     st.error(f"Gagal memuat model atau vektorizer: {e}")
     st.stop()
 
-def create_excel_download(results_df):
-    """Create downloadable Excel file from results"""
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        results_df.to_excel(writer, index=True)
-    output.seek(0)
-    return output
-
-def create_visualization(results):
-    """Create pie charts for visualization"""
-    cols = st.columns(3)
-    for i, (aspek, nilai) in enumerate([item for item in results.items() if item[0] != "Aspek Tidak Dikenali"]):
-        with cols[i]:
-            fig, ax = plt.subplots(figsize=(4, 4))
-            labels = ["Positif", "Negatif"]
-            sizes = [nilai["Positif"], nilai["Negatif"]]
-            colors = ["#4CAF50", "#FF5252"]
-            
-            if sum(sizes) > 0:
-                ax.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=90)
-                ax.set_title(aspek)
-            else:
-                ax.text(0.5, 0.5, "Tidak ada data", 
-                      horizontalalignment='center',
-                      verticalalignment='center')
-                ax.axis('off')
-            
-            st.pyplot(fig)
-            plt.close()
 
 def main():
     st.title("Sistem Prediksi Aspek dan Sentimen dengan Random Forest")
@@ -194,10 +165,10 @@ def main():
                 if aspect != "Aspek Tidak Dikenali"
             }).T
             
-            # Tampilkan visualisasi
+            # Tampilkan visualisasi terlebih dahulu sebelum download
             st.subheader("Visualisasi Sentimen per Aspek")
             create_visualization(results)
-            
+
             # Download Excel
             st.subheader("Download Hasil")
             excel_file = create_excel_download(hasil_df)
@@ -270,7 +241,7 @@ def main():
             }).T
             st.dataframe(hasil_df)
             
-            # Tampilkan visualisasi
+            # Tampilkan visualisasi terlebih dahulu sebelum download
             st.subheader("Visualisasi Sentimen per Aspek")
             create_visualization(results)
             
@@ -295,6 +266,7 @@ def main():
 
         except Exception as e:
             st.error(f"Terjadi kesalahan saat memproses file Excel: {e}")
+
 
 if __name__ == "__main__":
     main()
