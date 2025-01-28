@@ -180,7 +180,7 @@ def main():
                     if aspek != "Aspek Tidak Dikenali":
                         labels = ["Positif", "Negatif"]
                         sizes = [nilai["Positif"], nilai["Negatif"]]
-                        colors = ["#8B0000", "#00008B"]
+                        colors = ["blue", "red"]
 
 
                         fig, ax = plt.subplots()
