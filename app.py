@@ -3,7 +3,6 @@ import pandas as pd
 import re
 import joblib
 import matplotlib.pyplot as plt
-from sklearn.feature_extraction.text import TfidfVectorizer
 
 # Fungsi untuk membersihkan teks
 def clean_text(text):
@@ -16,76 +15,73 @@ def normalize_negation(text):
         r'\btidak bersih\b': 'kotor',
         r'\btidak teratur\b': 'berantakan',
         r'\btidak lengkap\b': 'tidaklengkap',
-    r'\btidak memadai\b': 'kurangmemadai',
-    r'\btidak nyaman\b': 'tidaknyaman',
-    r'\btidak ramah\b': 'tidakramah',
-    r'\btidak segar\b': 'tidaksegar',
-    r'\btidak enak\b': 'tidakenak',
-    r'\btidak sopan\b': 'tidaksopan',
-    r'\btidak profesional\b': 'tidakprofesional',
-    r'\btidak responsif\b': 'cuek',
-    r'\btidak efisien\b': 'tidakefisien',
-    r'\btidak konsisten\b': 'tidakkonsisten',
-    r'\btidak stabil\b': 'tidakstabil',
-    r'\btidak matang\b': 'tidakmatang',
-    r'\btidak membantu\b': 'tidakmembantu',
-    r'\btidak cepat\b': 'lambat',
-    r'\btidak wajar\b': 'aneh',
-    r'\btidak sesuai\b': 'tidaksesuai',
-    r'\btidak aman\b': 'tidakaman',
-    r'\btidak jujur\b': 'tidakjujur',
-    r'\btidak peduli\b': 'cuek',
-    r'\btidak terawat\b': 'tidakterawat',
-    r'\btidak tepat waktu\b': 'tidaktepatwaktu',
-    r'\btidak tanggap\b': 'tidaksigap',
-    r'\btidak bertanggung jawab\b': 'tidakbertanggungjawab',
-    r'\btidak wangi\b': 'bau',
-    r'\btidak layak\b': 'tidaklayak',
-
-    # Kata negasi diawali dengan "kurang"
-    r'\bkurang bersih\b': 'kotor',
-    r'\bkurang memuaskan\b': 'tidakmemuaskan',
-    r'\bkurang sopan\b': 'tidaksopan',
-    r'\bkurang cepat\b': 'lambat',
-    r'\bkurang nyaman\b': 'tidaknyaman',
-    r'\bkurang ramah\b': 'tidakramah',
-    r'\bkurang segar\b': 'tidaksegar',
-    r'\bkurang profesional\b': 'tidakprofesional',
-    r'\bkurang terawat\b': 'tidakterawat',
-    r'\bkurang efisien\b': 'tidakefisien',
-    r'\bkurang matang\b': 'tidakmatang',
-    r'\bkurang sigap\b': 'tidaksigap',
-    r'\bkurang informatif\b': 'tidakinformatif',
-    r'\bkurang sesuai ekspektasi\b': 'kecewa',
-
-    # Slang dan typo
-    r'\btdk bersih\b': 'kotor',
-    r'\btdk cepat\b': 'lambat',
-    r'\btdk nyaman\b': 'tidaknyaman',
-    r'\btdk ramah\b': 'tidakramah',
-    r'\bg enak\b': 'tidakenak',
-    r'\bg aman\b': 'tidakaman',
-    r'\bg sopan\b': 'tidaksopan',
-    r'\bg stabil\b': 'tidakstabil',
-    r'\btdk rapi\b': 'berantakan',
-    r'\bg rapi\b': 'berantakan',
-
-    # Frase tambahan sesuai konteks ulasan
-    r'\btidak dilayani\b': 'cuek',
-    r'\btdk dilayani\b': 'cuek',
-    r'\btdk sesuai\b': 'kecewa',
-    r'\btidak sesuai\b': 'kecewa',
-    r'\btidak diprioritaskan\b': 'diabaikan',
-    r'\btidak sesuai ekspektasi\b': 'kecewa',
-    r'\btidak jujur\b': 'tidakjujur',
-    r'\btdk jujur\b': 'tidakjujur',
-    r'\btidak menepati janji\b': 'tidakjujur',
-    r'\bkurang tanggung jawab\b': 'tidakbertanggungjawab',
-    r'\bkurang perhatian\b': 'cuek',
-    r'\bkurang detail\b': 'tidakdetail',
-    r'\bkurang terorganisir\b': 'asal-asalan',
-    r'\btidak terlaksana dengan baik\b': 'berantakan',
-    r'\btidak memenuhi harapan\b': 'kecewa'
+        r'\btidak memadai\b': 'kurangmemadai',
+        r'\btidak nyaman\b': 'tidaknyaman',
+        r'\btidak ramah\b': 'tidakramah',
+        r'\btidak segar\b': 'tidaksegar',
+        r'\btidak enak\b': 'tidakenak',
+        r'\btidak sopan\b': 'tidaksopan',
+        r'\btidak profesional\b': 'tidakprofesional',
+        r'\btidak responsif\b': 'cuek',
+        r'\btidak efisien\b': 'tidakefisien',
+        r'\btidak konsisten\b': 'tidakkonsisten',
+        r'\btidak stabil\b': 'tidakstabil',
+        r'\btidak matang\b': 'tidakmatang',
+        r'\btidak membantu\b': 'tidakmembantu',
+        r'\btidak cepat\b': 'lambat',
+        r'\btidak wajar\b': 'aneh',
+        r'\btidak sesuai\b': 'tidaksesuai',
+        r'\btidak aman\b': 'tidakaman',
+        r'\btidak jujur\b': 'tidakjujur',
+        r'\btidak peduli\b': 'cuek',
+        r'\btidak terawat\b': 'tidakterawat',
+        r'\btidak tepat waktu\b': 'tidaktepatwaktu',
+        r'\btidak tanggap\b': 'tidaksigap',
+        r'\btidak bertanggung jawab\b': 'tidakbertanggungjawab',
+        r'\btidak wangi\b': 'bau',
+        r'\btidak layak\b': 'tidaklayak',
+        # Kata negasi diawali dengan "kurang"
+        r'\bkurang bersih\b': 'kotor',
+        r'\bkurang memuaskan\b': 'tidakmemuaskan',
+        r'\bkurang sopan\b': 'tidaksopan',
+        r'\bkurang cepat\b': 'lambat',
+        r'\bkurang nyaman\b': 'tidaknyaman',
+        r'\bkurang ramah\b': 'tidakramah',
+        r'\bkurang segar\b': 'tidaksegar',
+        r'\bkurang profesional\b': 'tidakprofesional',
+        r'\bkurang terawat\b': 'tidakterawat',
+        r'\bkurang efisien\b': 'tidakefisien',
+        r'\bkurang matang\b': 'tidakmatang',
+        r'\bkurang sigap\b': 'tidaksigap',
+        r'\bkurang informatif\b': 'tidakinformatif',
+        r'\bkurang sesuai ekspektasi\b': 'kecewa',
+        # Slang dan typo
+        r'\btdk bersih\b': 'kotor',
+        r'\btdk cepat\b': 'lambat',
+        r'\btdk nyaman\b': 'tidaknyaman',
+        r'\btdk ramah\b': 'tidakramah',
+        r'\bg enak\b': 'tidakenak',
+        r'\bg aman\b': 'tidakaman',
+        r'\bg sopan\b': 'tidaksopan',
+        r'\bg stabil\b': 'tidakstabil',
+        r'\btdk rapi\b': 'berantakan',
+        r'\bg rapi\b': 'berantakan',
+        # Frase tambahan sesuai konteks ulasan
+        r'\btidak dilayani\b': 'cuek',
+        r'\btdk dilayani\b': 'cuek',
+        r'\btdk sesuai\b': 'kecewa',
+        r'\btidak sesuai\b': 'kecewa',
+        r'\btidak diprioritaskan\b': 'diabaikan',
+        r'\btidak sesuai ekspektasi\b': 'kecewa',
+        r'\btidak jujur\b': 'tidakjujur',
+        r'\btdk jujur\b': 'tidakjujur',
+        r'\btidak menepati janji\b': 'tidakjujur',
+        r'\bkurang tanggung jawab\b': 'tidakbertanggungjawab',
+        r'\bkurang perhatian\b': 'cuek',
+        r'\bkurang detail\b': 'tidakdetail',
+        r'\bkurang terorganisir\b': 'asal-asalan',
+        r'\btidak terlaksana dengan baik\b': 'berantakan',
+        r'\btidak memenuhi harapan\b': 'kecewa'
     }
     for pattern, replacement in negation_patterns.items():
         text = re.sub(pattern, replacement, text)
@@ -155,14 +151,14 @@ def main():
                 if 'ulasan' not in df.columns:
                     st.error("File Excel harus memiliki kolom 'ulasan'.")
                     return
-                 results = {
-                "Fasilitas": {"Positif": 0, "Negatif": 0},
-                "Pelayanan": {"Positif": 0, "Negatif": 0},
-                "Masakan": {"Positif": 0, "Negatif": 0},
-                "Aspek Tidak Dikenali": 0
-            }
                 
-               
+                results = {
+                    "Fasilitas": {"Positif": 0, "Negatif": 0},
+                    "Pelayanan": {"Positif": 0, "Negatif": 0},
+                    "Masakan": {"Positif": 0, "Negatif": 0},
+                    "Aspek Tidak Dikenali": 0
+                }
+                
                 for index, row in df.iterrows():
                     ulasan = row['ulasan']
                     processed_text = preprocess_text(ulasan, stopword_model, stemmer_model)
@@ -176,11 +172,11 @@ def main():
                         predicted_sentiment = rf_sentimen_model.predict(sentiment_vectorized)[0]
                         results[predicted_aspect.capitalize()][predicted_sentiment.capitalize()] += 1
                 
-                # Tampilkan hasil
-                st.write("Hasil Prediksi:")
-                st.write(results)
-                 # Menampilkan Pie Chart dengan Matplotlib
-                for aspek, nilai in results.items():
+                # Tampilkan pie chart secara horizontal
+                st.write("Distribusi Sentimen per Aspek:")
+                cols = st.columns(len(results) - 1)  # Menghilangkan "Aspek Tidak Dikenali"
+                
+                for idx, (aspek, nilai) in enumerate(results.items()):
                     if aspek != "Aspek Tidak Dikenali":
                         labels = ["Positif", "Negatif"]
                         sizes = [nilai["Positif"], nilai["Negatif"]]
@@ -190,27 +186,11 @@ def main():
                         ax.pie(sizes, labels=labels, autopct='%1.1f%%', colors=colors, startangle=90)
                         ax.set_title(f"Sentimen {aspek}")
 
-                        st.pyplot(fig)
-
-                # Menampilkan Pie Chart dengan Plotly
-                for aspek, nilai in results.items():
-                    if aspek != "Aspek Tidak Dikenali":
-                        df_chart = pd.DataFrame({
-                            "Kategori": ["Positif", "Negatif"],
-                            "Jumlah": [nilai["Positif"], nilai["Negatif"]]
-                        })
-
-                        fig = px.pie(df_chart, names="Kategori", values="Jumlah", title=f"Sentimen {aspek}", 
-                                     color_discrete_sequence=["#66b3ff", "#ff6666"])
-
-                        st.plotly_chart(fig)
-
+                        with cols[idx]:
+                            st.pyplot(fig)
+            
             except Exception as e:
                 st.error(f"Terjadi kesalahan saat memproses file Excel: {e}")
 
-            
-          
-
 if __name__ == "__main__":
     main()
-perbaiki name resuul is not defined
