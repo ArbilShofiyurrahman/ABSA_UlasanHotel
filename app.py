@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from nltk.tokenize import word_tokenize  # Add this import
 import nltk
 nltk.download('punkt')
+nltk.download('stopwords')
 
 
 
