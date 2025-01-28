@@ -34,8 +34,8 @@ def preprocess_text(text, stopword_model, stemmer_model):
 try:
     stopword_model = joblib.load('stopword_remover_model.pkl')
     stemmer_model = joblib.load('stemmer_model.pkl')
-    tfidf_vectorizer_aspek = joblib.load('tfidf_vectorizer_aspek.pkl')
-    tfidf_vectorizer_sentimen = joblib.load('tfidf_vectorizer_sentimen.pkl')
+    tfidf_aspek = joblib.load('tfidf_aspek.pkl')
+    tfidf_sentimen = joblib.load('tfidf_sentimen.pkl')
     rf_aspek_model = joblib.load('rf_aspek_model.pkl')
     rf_sentimen_model = joblib.load('rf_sentimen_model.pkl')
     
@@ -65,14 +65,14 @@ def main():
                 st.warning("Masukkan teks terlebih dahulu.")
             else:
                 processed_text = preprocess_text(user_input, stopword_model, stemmer_model)
-                aspect_vectorized = tfidf_vectorizer_aspek.transform([processed_text])
+                aspect_vectorized = tfidf_aspek.transform([processed_text])
                 predicted_aspect = rf_aspek_model.predict(aspect_vectorized)[0]
                 
                 if predicted_aspect == "tidak_dikenali":
                     st.write("**Aspek**: Tidak Dikenali")
                     st.write("**Sentimen**: -")
                 else:
-                    sentiment_vectorized = tfidf_vectorizer_sentimen.transform([processed_text])
+                    sentiment_vectorized = tfidf_sentimen.transform([processed_text])
                     predicted_sentiment = rf_sentimen_model.predict(sentiment_vectorized)[0]
                     st.write(f"**Aspek**: {predicted_aspect.capitalize()}")
                     st.write(f"**Sentimen**: {predicted_sentiment.capitalize()}")
@@ -96,13 +96,13 @@ def main():
                 for index, row in df.iterrows():
                     ulasan = row['ulasan']
                     processed_text = preprocess_text(ulasan, stopword_model, stemmer_model)
-                    aspect_vectorized = tfidf_vectorizer_aspek.transform([processed_text])
+                    aspect_vectorized = tfidf_aspek.transform([processed_text])
                     predicted_aspect = rf_aspek_model.predict(aspect_vectorized)[0]
                     
                     if predicted_aspect == "tidak_dikenali":
                         results["Aspek Tidak Dikenali"] += 1
                     else:
-                        sentiment_vectorized = tfidf_vectorizer_sentimen.transform([processed_text])
+                        sentiment_vectorized = tfidf_sentimen.transform([processed_text])
                         predicted_sentiment = rf_sentimen_model.predict(sentiment_vectorized)[0]
                         results[predicted_aspect.capitalize()][predicted_sentiment.capitalize()] += 1
                 
