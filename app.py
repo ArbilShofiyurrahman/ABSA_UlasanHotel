@@ -158,10 +158,7 @@ def main():
 
                 # Inisialisasi hasil prediksi
                 results = {
-                    "Fasilitas": {"Positif": 0, "Negatif": 0},
-                    "Pelayanan": {"Positif": 0, "Negatif": 0},
-                    "Masakan": {"Positif": 0, "Negatif": 0},
-                    "Aspek Tidak Dikenali": 0
+                   
                 }
 
                 for _, row in df.iterrows():
