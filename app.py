@@ -144,48 +144,67 @@ def main():
                     st.write(f"**Sentimen**: {predicted_sentiment.capitalize()}")
 
     elif input_option == "File Excel":
-    uploaded_file = st.file_uploader("Upload file Excel", type=["xlsx"])
-    if uploaded_file is not None:
-        try:
-            df = pd.read_excel(uploaded_file)
-            if 'ulasan' not in df.columns:
-                st.error("File Excel harus memiliki kolom 'ulasan'.")
-                return
-            
-            df["Aspek"] = ""
-            df["Sentimen"] = ""
+        uploaded_file = st.file_uploader("Upload file Excel", type=["xlsx"])
+        if uploaded_file is not None:
+            try:
+                df = pd.read_excel(uploaded_file)
+                if 'ulasan' not in df.columns:
+                    st.error("File Excel harus memiliki kolom 'ulasan'.")
+                    return
+                
+                # Tambah progress bar
+                progress_bar = st.progress(0)
+                status_text = st.empty()
+                
+                df["Aspek"] = ""
+                df["Sentimen"] = ""
 
-            for index, row in df.iterrows():
-                ulasan = row['ulasan']
-                processed_text = preprocess_text(ulasan, stopword_model, stemmer_model)
-                aspect_vectorized = tfidf_aspek.transform([processed_text])
-                predicted_aspect = rf_aspek_model.predict(aspect_vectorized)[0]
+                # Proses setiap baris dengan progress bar
+                total_rows = len(df)
+                for index, row in df.iterrows():
+                    ulasan = row['ulasan']
+                    processed_text = preprocess_text(ulasan, stopword_model, stemmer_model)
+                    aspect_vectorized = tfidf_aspek.transform([processed_text])
+                    predicted_aspect = rf_aspek_model.predict(aspect_vectorized)[0]
 
-                if predicted_aspect == "tidak_dikenali":
-                    df.at[index, "Aspek"] = "Tidak Dikenali"
-                    df.at[index, "Sentimen"] = "-"
-                else:
-                    sentiment_vectorized = tfidf_sentimen.transform([processed_text])
-                    predicted_sentiment = rf_sentimen_model.predict(sentiment_vectorized)[0]
-                    df.at[index, "Aspek"] = predicted_aspect.capitalize()
-                    df.at[index, "Sentimen"] = predicted_sentiment.capitalize()
-            
-            # Simpan ke file Excel
-            output_file = "hasil_prediksi.xlsx"
-            df.to_excel(output_file, index=False)
+                    if predicted_aspect == "tidak_dikenali":
+                        df.at[index, "Aspek"] = "Tidak Dikenali"
+                        df.at[index, "Sentimen"] = "-"
+                    else:
+                        sentiment_vectorized = tfidf_sentimen.transform([processed_text])
+                        predicted_sentiment = rf_sentimen_model.predict(sentiment_vectorized)[0]
+                        df.at[index, "Aspek"] = predicted_aspect.capitalize()
+                        df.at[index, "Sentimen"] = predicted_sentiment.capitalize()
+                    
+                    # Update progress
+                    progress = (index + 1) / total_rows
+                    progress_bar.progress(progress)
+                    status_text.text(f'Memproses baris {index + 1} dari {total_rows}')
 
-            # Tampilkan tombol download
-            with open(output_file, "rb") as f:
+                # Setelah selesai memproses
+                progress_bar.progress(100)
+                status_text.text('Pemrosesan selesai!')
+
+                # Konversi DataFrame ke Excel di memory
+                output = io.BytesIO()
+                with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                    df.to_excel(writer, index=False)
+                output.seek(0)
+
+                # Tampilkan preview data
+                st.subheader("Preview Hasil Prediksi")
+                st.dataframe(df.head())
+
+                # Tombol download
                 st.download_button(
                     label="📥 Download Hasil Prediksi",
-                    data=f,
+                    data=output,
                     file_name="hasil_prediksi.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
-        
-        except Exception as e:
-            st.error(f"Terjadi kesalahan saat memproses file Excel: {e}")
 
+            except Exception as e:
+                st.error(f"Terjadi kesalahan saat memproses file Excel: {e}")
 
 if __name__ == "__main__":
     main()
