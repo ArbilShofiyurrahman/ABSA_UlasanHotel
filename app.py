@@ -40,10 +40,10 @@ try:
     rf_sentimen_model = joblib.load('rf_sentimen_model.pkl')
     
     # Pastikan vektorizer sudah di-fit
-    if not hasattr(tfidf_vectorizer_aspek, 'vocabulary_'):
+    if not hasattr(tfidf_aspek, 'vocabulary_'):
         st.error("Vektorizer aspek belum di-fit dengan data.")
         st.stop()
-    if not hasattr(tfidf_vectorizer_sentimen, 'vocabulary_'):
+    if not hasattr(tfidf_sentimen, 'vocabulary_'):
         st.error("Vektorizer sentimen belum di-fit dengan data.")
         st.stop()
 except Exception as e:
