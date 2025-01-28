@@ -147,42 +147,41 @@ def main():
                     st.write(f"**Aspek**: {predicted_aspect.capitalize()}")
                     st.write(f"**Sentimen**: {predicted_sentiment.capitalize()}")
 
-    elif input_option == "File Excel":
-        uploaded_file = st.file_uploader("Upload file Excel", type=["xlsx"])
-        if uploaded_file is not None:
-            try:
-                df = pd.read_excel(uploaded_file)
-                if 'ulasan' not in df.columns:
-                    st.error("File Excel harus memiliki kolom 'ulasan'.")
-                    return
+    # Lakukan prediksi aspek dan sentimen
+                for ulasan in df['ulasan']:
+                    aspek, sentimen = predict_aspect_and_sentiment(ulasan)
+                    if aspek in results:
+                        results[aspek][sentimen] += 1
+                    else:
+                        results["Aspek Tidak Dikenali"] += 1
 
-                # Inisialisasi hasil prediksi
-                results = {
-                    "Fasilitas": {"Positif": 0, "Negatif": 0},
-                    "Pelayanan": {"Positif": 0, "Negatif": 0},
-                    "Masakan": {"Positif": 0, "Negatif": 0},
-                    "Aspek Tidak Dikenali": 0
-                }
+                # Tampilkan hasil dalam tabel
+                st.write("### Hasil Analisis Sentimen")
+                hasil_df = pd.DataFrame(results).T
+                st.dataframe(hasil_df)
+
                 # Tampilkan pie chart dalam satu baris
                 st.write("### Distribusi Sentimen per Aspek")
-                
-                columns = st.columns(len(results))  # Buat kolom horizontal sesuai jumlah aspek
-                
+                columns = st.columns(len(results) - 1)  # Hapus "Aspek Tidak Dikenali"
+
                 for i, (aspek, nilai) in enumerate(results.items()):
+                    if aspek == "Aspek Tidak Dikenali":
+                        continue  # Skip aspek tidak dikenali
+
                     labels = ["Positif", "Negatif"]
                     sizes = [nilai["Positif"], nilai["Negatif"]]
                     colors = ["#4CAF50", "#FF5252"]  # Hijau untuk positif, merah untuk negatif
-                
+
                     fig, ax = plt.subplots(figsize=(3, 3))  # Pie chart lebih kecil
                     ax.pie(sizes, labels=labels, autopct='%1.1f%%', colors=colors, startangle=90)
                     ax.set_title(aspek, fontsize=12)
-                
+
                     # Tampilkan di dalam kolom yang sesuai
                     with columns[i]:
                         st.pyplot(fig)
 
-            except Exception as e:
-                st.error(f"Terjadi kesalahan saat memproses file Excel: {e}")
+        except Exception as e:
+            st.error(f"Terjadi kesalahan saat memproses file Excel: {e}")
 
 if __name__ == "__main__":
     main()
