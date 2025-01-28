@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 def clean_text(text):
 # Menghapus angka, tanda baca, dan karakter spesial
-text = re.sub(r'[^a-zA-Z\s]', '', text)
+    text = re.sub(r'[^a-zA-Z\s]', '', text)
 return text
 
 # Fungsi Tokenisasi
