@@ -13,12 +13,13 @@ def preprocess_text(text, normalizer_model, stopword_model, stemmer_model):
     return text
 
 # Memuat Model
-normalizer_model = joblib.load('normalisasi_pld.pkl')
-stopword_model = joblib.load('stopword_remover_model_pld.pkl')
-stemmer_model = joblib.load('stemmer_model_pld.pkl')
-tfidf_vectorizer_aspek = joblib.load('tfidf_vectorizer_aspek_pld.pkl')
-rf_aspek_model = joblib.load('rf_aspek_model_pld.pkl')
-rf_sentimen_model = joblib.load('rf_sentimen_model_pld.pkl')
+normalizer_model = joblib.load('normalisasi.pkl')
+stopword_model = joblib.load('stopword_remover_model.pkl')
+stemmer_model = joblib.load('stemmer_model.pkl')
+tfidf_vectorizer_aspek = joblib.load('tfidf_vectorizer_aspek.pkl')
+tfidf_vectorizer_sentimen = joblib.load('tfidf_vectorizer_sentimen.pkl')
+rf_aspek_model = joblib.load('rf_aspek_model.pkl')
+rf_sentimen_model = joblib.load('rf_sentimen_model.pkl')
 
 # Aplikasi Streamlit
 def main():
