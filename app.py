@@ -4,6 +4,12 @@ import re
 import joblib
 import matplotlib.pyplot as plt
 
+# Fungsi Normalisasi (Contoh)
+def normalizer(text):
+    # Anda bisa mengganti ini dengan metode normalisasi Anda
+    text = re.sub(r'[^a-zA-Z\s]', '', text)
+    return text
+
 # Fungsi Preprocessing
 def preprocess_text(text, normalizer_model, stopword_model, stemmer_model):
     text = text.lower()  # Casefolding
@@ -13,7 +19,7 @@ def preprocess_text(text, normalizer_model, stopword_model, stemmer_model):
     return text
 
 # Memuat Model
-normalizer_model = joblib.load('normalisasi.pkl')
+normalizer_model = joblib.load('normalisasi.pkl')  # Model Normalisasi
 stopword_model = joblib.load('stopword_remover_model.pkl')
 stemmer_model = joblib.load('stemmer_model.pkl')
 tfidf_vectorizer_aspek = joblib.load('tfidf_vectorizer_aspek.pkl')
