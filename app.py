@@ -97,7 +97,7 @@ def normalize_negation(text):
 
 
 # Fungsi Preprocessing
-def preprocess_text(text, normalizer_model, stopword_model, stemmer_model):
+def preprocess_text(text, stopword_model, stemmer_model):
     text = text.lower()  # Casefolding
     text = clean_text(text) 
     text = normalize_negation(text)   # Normalisasi
