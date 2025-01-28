@@ -118,6 +118,47 @@ try:
 except Exception as e:
     st.error(f"Gagal memuat model atau vektorizer: {e}")
     st.stop()
+def create_aspect_sentiment_pies(df):
+    # Create figure with three subplots horizontally
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
+    
+    # Colors for the pie charts
+    colors = ['#2ecc71', '#e74c3c']  # Green for positive, Red for negative
+    
+    # Function to calculate percentages for each aspect
+    def calculate_percentages(aspect_data):
+        total = len(aspect_data)
+        if total == 0:
+            return [0, 0], ['Positif (0%)', 'Negatif (0%)']
+        
+        positive = (aspect_data['Sentimen'] == 'Positif').sum()
+        negative = (aspect_data['Sentimen'] == 'Negatif').sum()
+        
+        pos_pct = (positive / total) * 100
+        neg_pct = (negative / total) * 100
+        
+        return [pos_pct, neg_pct], [f'Positif ({pos_pct:.1f}%)', f'Negatif ({neg_pct:.1f}%)']
+
+    # Fasilitas
+    fasilitas_data = df[df['Aspek'] == 'Fasilitas']
+    values, labels = calculate_percentages(fasilitas_data)
+    ax1.pie(values, labels=labels, colors=colors, autopct='', startangle=90)
+    ax1.set_title('Sentimen Fasilitas')
+
+    # Pelayanan
+    pelayanan_data = df[df['Aspek'] == 'Pelayanan']
+    values, labels = calculate_percentages(pelayanan_data)
+    ax2.pie(values, labels=labels, colors=colors, autopct='', startangle=90)
+    ax2.set_title('Sentimen Pelayanan')
+
+    # Masakan
+    masakan_data = df[df['Aspek'] == 'Masakan']
+    values, labels = calculate_percentages(masakan_data)
+    ax3.pie(values, labels=labels, colors=colors, autopct='', startangle=90)
+    ax3.set_title('Sentimen Masakan')
+
+    plt.tight_layout()
+    return fig
 
 # Aplikasi Streamlit
 def main():
