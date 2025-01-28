@@ -4,8 +4,6 @@ import re
 import joblib
 import matplotlib.pyplot as plt
 
-
-
 # Fungsi untuk membersihkan teks
 def clean_text(text):
     text = re.sub(r'[^a-zA-Z\s]', '', text)  # Menghapus angka dan karakter non-huruf
@@ -42,7 +40,7 @@ def normalize_negation(text):
         r'\btidak bertanggung jawab\b': 'tidakbertanggungjawab',
         r'\btidak wangi\b': 'bau',
         r'\btidak layak\b': 'tidaklayak',
-       # Kata negasi diawali dengan "kurang"
+        # Kata negasi diawali dengan "kurang"
         r'\bkurang bersih\b': 'kotor',
         r'\bkurang memuaskan\b': 'tidakmemuaskan',
         r'\bkurang sopan\b': 'tidaksopan',
@@ -68,7 +66,6 @@ def normalize_negation(text):
         r'\bg stabil\b': 'tidakstabil',
         r'\btdk rapi\b': 'berantakan',
         r'\bg rapi\b': 'berantakan',
-    
         # Frase tambahan sesuai konteks ulasan
         r'\btidak dilayani\b': 'cuek',
         r'\btdk dilayani\b': 'cuek',
@@ -85,13 +82,12 @@ def normalize_negation(text):
         r'\bkurang terorganisir\b': 'asal-asalan',
         r'\btidak terlaksana dengan baik\b': 'berantakan',
         r'\btidak memenuhi harapan\b': 'kecewa'
-        }
+    }
 
     # Lakukan penggantian kata sesuai pola
     for pattern, replacement in negation_patterns.items():
         text = re.sub(pattern, replacement, text)
     return text
-
 
 # Fungsi Preprocessing
 def preprocess_text(text, stopword_model, stemmer_model):
@@ -103,12 +99,16 @@ def preprocess_text(text, stopword_model, stemmer_model):
     return text
 
 # Memuat Model
-stopword_model = joblib.load('stopword_remover_model.pkl')
-stemmer_model = joblib.load('stemmer_model.pkl')
-tfidf_vectorizer_aspek = joblib.load('tfidf_vectorizer_aspek.pkl')
-tfidf_vectorizer_sentimen = joblib.load('tfidf_vectorizer_sentimen.pkl')
-rf_aspek_model = joblib.load('rf_aspek_model.pkl')
-rf_sentimen_model = joblib.load('rf_sentimen_model.pkl')
+try:
+    stopword_model = joblib.load('stopword_remover_model.pkl')
+    stemmer_model = joblib.load('stemmer_model.pkl')
+    tfidf_vectorizer_aspek = joblib.load('tfidf_vectorizer_aspek.pkl')
+    tfidf_vectorizer_sentimen = joblib.load('tfidf_vectorizer_sentimen.pkl')
+    rf_aspek_model = joblib.load('rf_aspek_model.pkl')
+    rf_sentimen_model = joblib.load('rf_sentimen_model.pkl')
+except FileNotFoundError as e:
+    st.error(f"File model tidak ditemukan: {e}")
+    st.stop()
 
 # Aplikasi Streamlit
 def main():
@@ -123,49 +123,11 @@ def main():
         user_input = st.text_area("Masukkan Teks", "")
         
         if st.button("Prediksi"):
-            # Preprocessing
-            processed_text = preprocess_text(user_input, stopword_model, stemmer_model)
-            
-            # TF-IDF untuk aspek
-            aspect_vectorized = tfidf_vectorizer_aspek.transform([processed_text])
-            
-            # Prediksi Aspek
-            predicted_aspect = rf_aspek_model.predict(aspect_vectorized)[0]
-            
-            if predicted_aspect == "tidak_dikenali":
-                st.write("**Aspek**: Tidak Dikenali")
-                st.write("**Sentimen**: -")
+            if not user_input:
+                st.warning("Masukkan teks terlebih dahulu.")
             else:
-                # Prediksi Sentimen
-                sentiment_vectorized = tfidf_vectorizer_aspek.transform([processed_text])
-                predicted_sentiment = rf_sentimen_model.predict(sentiment_vectorized)[0]
-                
-                # Menampilkan hasil prediksi
-                st.write(f"**Aspek**: {predicted_aspect.capitalize()}")
-                st.write(f"**Sentimen**: {predicted_sentiment.capitalize()}")
-
-    elif input_option == "File Excel":
-        # Upload file Excel
-        uploaded_file = st.file_uploader("Upload file Excel", type=["xlsx"])
-        
-        if uploaded_file is not None:
-            df = pd.read_excel(uploaded_file)
-            
-            if 'ulasan' not in df.columns:
-                st.error("File Excel harus memiliki kolom 'ulasan'.")
-                return
-            
-            # Preprocessing dan prediksi untuk setiap baris dalam file
-            results = {
-                "Aspek Tidak Dikenali": 0,
-                "Fasilitas": {"Positif": 0, "Negatif": 0},
-                "Pelayanan": {"Positif": 0, "Negatif": 0},
-                "Masakan": {"Positif": 0, "Negatif": 0}
-            }
-            
-            for index, row in df.iterrows():
-                ulasan = row['ulasan']
-                processed_text = preprocess_text(ulasan, stopword_model, stemmer_model)
+                # Preprocessing
+                processed_text = preprocess_text(user_input, stopword_model, stemmer_model)
                 
                 # TF-IDF untuk aspek
                 aspect_vectorized = tfidf_vectorizer_aspek.transform([processed_text])
@@ -174,43 +136,90 @@ def main():
                 predicted_aspect = rf_aspek_model.predict(aspect_vectorized)[0]
                 
                 if predicted_aspect == "tidak_dikenali":
-                    results["Aspek Tidak Dikenali"] += 1
+                    st.write("**Aspek**: Tidak Dikenali")
+                    st.write("**Sentimen**: -")
                 else:
                     # Prediksi Sentimen
-                    sentiment_vectorized = tfidf_vectorizer_aspek.transform([processed_text])
+                    sentiment_vectorized = tfidf_vectorizer_sentimen.transform([processed_text])
                     predicted_sentiment = rf_sentimen_model.predict(sentiment_vectorized)[0]
                     
-                    if predicted_aspect == "fasilitas":
-                        results["Fasilitas"][predicted_sentiment.capitalize()] += 1
-                    elif predicted_aspect == "pelayanan":
-                        results["Pelayanan"][predicted_sentiment.capitalize()] += 1
-                    elif predicted_aspect == "masakan":
-                        results["Masakan"][predicted_sentiment.capitalize()] += 1
-            
-            # Menampilkan hasil prediksi dalam bentuk diagram lingkaran
-            aspect_names = ["Aspek Tidak Dikenali", "Fasilitas", "Pelayanan", "Masakan"]
-            aspect_values = [
-                results["Aspek Tidak Dikenali"],
-                sum(results["Fasilitas"].values()),
-                sum(results["Pelayanan"].values()),
-                sum(results["Masakan"].values())
-            ]
-            
-            # Plot lingkaran untuk distribusi aspek
-            fig, ax = plt.subplots()
-            ax.pie(aspect_values, labels=aspect_names, autopct='%1.1f%%', startangle=90, colors=['#FF9999', '#66B3FF', '#99FF99', '#FFCC99'])
-            ax.axis('equal')
-            st.pyplot(fig)
-            
-            # Plot lingkaran untuk distribusi sentimen per aspek
-            for aspect in ["Fasilitas", "Pelayanan", "Masakan"]:
-                positive = results[aspect]["Positif"]
-                negative = results[aspect]["Negatif"]
+                    # Menampilkan hasil prediksi
+                    st.write(f"**Aspek**: {predicted_aspect.capitalize()}")
+                    st.write(f"**Sentimen**: {predicted_sentiment.capitalize()}")
+
+    elif input_option == "File Excel":
+        # Upload file Excel
+        uploaded_file = st.file_uploader("Upload file Excel", type=["xlsx"])
+        
+        if uploaded_file is not None:
+            try:
+                df = pd.read_excel(uploaded_file)
+                
+                if 'ulasan' not in df.columns:
+                    st.error("File Excel harus memiliki kolom 'ulasan'.")
+                    return
+                
+                # Preprocessing dan prediksi untuk setiap baris dalam file
+                results = {
+                    "Aspek Tidak Dikenali": 0,
+                    "Fasilitas": {"Positif": 0, "Negatif": 0},
+                    "Pelayanan": {"Positif": 0, "Negatif": 0},
+                    "Masakan": {"Positif": 0, "Negatif": 0}
+                }
+                
+                for index, row in df.iterrows():
+                    ulasan = row['ulasan']
+                    processed_text = preprocess_text(ulasan, stopword_model, stemmer_model)
+                    
+                    # TF-IDF untuk aspek
+                    aspect_vectorized = tfidf_vectorizer_aspek.transform([processed_text])
+                    
+                    # Prediksi Aspek
+                    predicted_aspect = rf_aspek_model.predict(aspect_vectorized)[0]
+                    
+                    if predicted_aspect == "tidak_dikenali":
+                        results["Aspek Tidak Dikenali"] += 1
+                    else:
+                        # Prediksi Sentimen
+                        sentiment_vectorized = tfidf_vectorizer_sentimen.transform([processed_text])
+                        predicted_sentiment = rf_sentimen_model.predict(sentiment_vectorized)[0]
+                        
+                        if predicted_aspect == "fasilitas":
+                            results["Fasilitas"][predicted_sentiment.capitalize()] += 1
+                        elif predicted_aspect == "pelayanan":
+                            results["Pelayanan"][predicted_sentiment.capitalize()] += 1
+                        elif predicted_aspect == "masakan":
+                            results["Masakan"][predicted_sentiment.capitalize()] += 1
+                
+                # Menampilkan hasil prediksi dalam bentuk diagram lingkaran
+                aspect_names = ["Aspek Tidak Dikenali", "Fasilitas", "Pelayanan", "Masakan"]
+                aspect_values = [
+                    results["Aspek Tidak Dikenali"],
+                    sum(results["Fasilitas"].values()),
+                    sum(results["Pelayanan"].values()),
+                    sum(results["Masakan"].values())
+                ]
+                
+                # Plot lingkaran untuk distribusi aspek
                 fig, ax = plt.subplots()
-                ax.pie([positive, negative], labels=["Positif", "Negatif"], autopct='%1.1f%%', startangle=90, colors=['#66B3FF', '#FF9999'])
+                ax.pie(aspect_values, labels=aspect_names, autopct='%1.1f%%', startangle=90, colors=['#FF9999', '#66B3FF', '#99FF99', '#FFCC99'])
                 ax.axis('equal')
-                st.write(f"Distribusi Sentimen untuk Aspek {aspect}:")
                 st.pyplot(fig)
+                plt.close(fig)
+                
+                # Plot lingkaran untuk distribusi sentimen per aspek
+                for aspect in ["Fasilitas", "Pelayanan", "Masakan"]:
+                    positive = results[aspect]["Positif"]
+                    negative = results[aspect]["Negatif"]
+                    fig, ax = plt.subplots()
+                    ax.pie([positive, negative], labels=["Positif", "Negatif"], autopct='%1.1f%%', startangle=90, colors=['#66B3FF', '#FF9999'])
+                    ax.axis('equal')
+                    st.write(f"Distribusi Sentimen untuk Aspek {aspect}:")
+                    st.pyplot(fig)
+                    plt.close(fig)
+            
+            except Exception as e:
+                st.error(f"Terjadi kesalahan saat memproses file Excel: {e}")
 
 # Menjalankan aplikasi
 if __name__ == "__main__":
