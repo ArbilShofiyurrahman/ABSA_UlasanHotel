@@ -156,13 +156,7 @@ def main():
                     st.error("File Excel harus memiliki kolom 'ulasan'.")
                     return
                 
-                results = {
-                    "Aspek Tidak Dikenali": 0,
-                    "Fasilitas": {"Positif": 0, "Negatif": 0},
-                    "Pelayanan": {"Positif": 0, "Negatif": 0},
-                    "Masakan": {"Positif": 0, "Negatif": 0}
-                }
-                
+               
                 for index, row in df.iterrows():
                     ulasan = row['ulasan']
                     processed_text = preprocess_text(ulasan, stopword_model, stemmer_model)
