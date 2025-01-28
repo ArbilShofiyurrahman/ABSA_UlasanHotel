@@ -147,41 +147,70 @@ def main():
                     st.write(f"**Aspek**: {predicted_aspect.capitalize()}")
                     st.write(f"**Sentimen**: {predicted_sentiment.capitalize()}")
 
-    # Lakukan prediksi aspek dan sentimen
-                for ulasan in df['ulasan']:
-                    aspek, sentimen = predict_aspect_and_sentiment(ulasan)
-                    if aspek in results:
-                        results[aspek][sentimen] += 1
-                    else:
+    elif input_option == "File Excel":
+        uploaded_file = st.file_uploader("Upload file Excel", type=["xlsx"])
+        if uploaded_file is not None:
+            try:
+                df = pd.read_excel(uploaded_file)
+                if 'ulasan' not in df.columns:
+                    st.error("File Excel harus memiliki kolom 'ulasan'.")
+                    return
+                 results = {
+                "Fasilitas": {"Positif": 0, "Negatif": 0},
+                "Pelayanan": {"Positif": 0, "Negatif": 0},
+                "Masakan": {"Positif": 0, "Negatif": 0},
+                "Aspek Tidak Dikenali": 0
+            }
+                
+               
+                for index, row in df.iterrows():
+                    ulasan = row['ulasan']
+                    processed_text = preprocess_text(ulasan, stopword_model, stemmer_model)
+                    aspect_vectorized = tfidf_aspek.transform([processed_text])
+                    predicted_aspect = rf_aspek_model.predict(aspect_vectorized)[0]
+                    
+                    if predicted_aspect == "tidak_dikenali":
                         results["Aspek Tidak Dikenali"] += 1
+                    else:
+                        sentiment_vectorized = tfidf_sentimen.transform([processed_text])
+                        predicted_sentiment = rf_sentimen_model.predict(sentiment_vectorized)[0]
+                        results[predicted_aspect.capitalize()][predicted_sentiment.capitalize()] += 1
+                
+                # Tampilkan hasil
+                st.write("Hasil Prediksi:")
+                st.write(results)
+                 # Menampilkan Pie Chart dengan Matplotlib
+                for aspek, nilai in results.items():
+                    if aspek != "Aspek Tidak Dikenali":
+                        labels = ["Positif", "Negatif"]
+                        sizes = [nilai["Positif"], nilai["Negatif"]]
+                        colors = ["#66b3ff", "#ff6666"]
 
-                # Tampilkan hasil dalam tabel
-                st.write("### Hasil Analisis Sentimen")
-                hasil_df = pd.DataFrame(results).T
-                st.dataframe(hasil_df)
+                        fig, ax = plt.subplots()
+                        ax.pie(sizes, labels=labels, autopct='%1.1f%%', colors=colors, startangle=90)
+                        ax.set_title(f"Sentimen {aspek}")
 
-                # Tampilkan pie chart dalam satu baris
-                st.write("### Distribusi Sentimen per Aspek")
-                columns = st.columns(len(results) - 1)  # Hapus "Aspek Tidak Dikenali"
-
-                for i, (aspek, nilai) in enumerate(results.items()):
-                    if aspek == "Aspek Tidak Dikenali":
-                        continue  # Skip aspek tidak dikenali
-
-                    labels = ["Positif", "Negatif"]
-                    sizes = [nilai["Positif"], nilai["Negatif"]]
-                    colors = ["#4CAF50", "#FF5252"]  # Hijau untuk positif, merah untuk negatif
-
-                    fig, ax = plt.subplots(figsize=(3, 3))  # Pie chart lebih kecil
-                    ax.pie(sizes, labels=labels, autopct='%1.1f%%', colors=colors, startangle=90)
-                    ax.set_title(aspek, fontsize=12)
-
-                    # Tampilkan di dalam kolom yang sesuai
-                    with columns[i]:
                         st.pyplot(fig)
 
-        except Exception as e:
-            st.error(f"Terjadi kesalahan saat memproses file Excel: {e}")
+                # Menampilkan Pie Chart dengan Plotly
+                for aspek, nilai in results.items():
+                    if aspek != "Aspek Tidak Dikenali":
+                        df_chart = pd.DataFrame({
+                            "Kategori": ["Positif", "Negatif"],
+                            "Jumlah": [nilai["Positif"], nilai["Negatif"]]
+                        })
+
+                        fig = px.pie(df_chart, names="Kategori", values="Jumlah", title=f"Sentimen {aspek}", 
+                                     color_discrete_sequence=["#66b3ff", "#ff6666"])
+
+                        st.plotly_chart(fig)
+
+            except Exception as e:
+                st.error(f"Terjadi kesalahan saat memproses file Excel: {e}")
+
+            
+          
 
 if __name__ == "__main__":
     main()
+perbaiki name resuul is not defined
