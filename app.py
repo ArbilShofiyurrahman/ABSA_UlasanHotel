@@ -84,7 +84,7 @@ def normalize_negation(text):
         r'\bkurang detail\b': 'tidakdetail',
         r'\bkurang terorganisir\b': 'asal-asalan',
         r'\btidak terlaksana dengan baik\b': 'berantakan',
-        r'\btidak memenuhi harapan\b': 'kecewa'
+        r'\btidak memenuhi harapan\b': 'kecewa',
         r'\btidak jelek\b': 'bagus'
     }
     for pattern, replacement in negation_patterns.items():
