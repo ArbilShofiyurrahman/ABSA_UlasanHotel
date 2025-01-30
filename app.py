@@ -85,6 +85,7 @@ def normalize_negation(text):
         r'\bkurang terorganisir\b': 'asal-asalan',
         r'\btidak terlaksana dengan baik\b': 'berantakan',
         r'\btidak memenuhi harapan\b': 'kecewa'
+        r'\btidak jelek\b': 'bagus'
     }
     for pattern, replacement in negation_patterns.items():
         text = re.sub(pattern, replacement, text)
@@ -121,9 +122,9 @@ def main():
     # Menyediakan menu/tab untuk input teks atau file
     tab1, tab2 = st.tabs(["Input Teks", "Upload File"])
     
-    with tab1:
+   with tab1:
         st.subheader("Input Teks Tunggal")
-        user_input = st.text_area("Masukkan Teks", "")
+        user_input = st.text_area("Masukkan Teks", "kamar tidak jelek dan rapi")
         if st.button("Prediksi Teks"):
             if not user_input:
                 st.warning("Masukkan teks terlebih dahulu.")
