@@ -142,15 +142,19 @@ def main():
                     st.write(f"**Sentimen**: {predicted_sentiment.capitalize()}")
     
     with tab2:
-        st.subheader("Input File, Pastikan Terdapat Kolom (ulasan) ")
-       uploaded_file = st.file_uploader("Upload file CSV atau Excel", type=["csv", "xlsx"])
-
-if uploaded_file is not None:
-    try:
-        if uploaded_file.name.endswith(".csv"):
-            df = pd.read_csv(uploaded_file)
-        else:
-            df = pd.read_excel(uploaded_file)
+        st.subheader("Input File, Pastikan Terdapat Kolom (ulasan)")
+        uploaded_file = st.file_uploader("Upload file CSV atau Excel", type=["csv", "xlsx"])
+    
+    if uploaded_file is not None:
+        try:
+            if uploaded_file.name.endswith(".csv"):
+                df = pd.read_csv(uploaded_file)
+            else:
+                df = pd.read_excel(uploaded_file)
+            
+            if 'ulasan' not in df.columns:
+                st.error("File harus memiliki kolom 'ulasan'.")
+                return
 
             
             df["Aspek"] = ""
