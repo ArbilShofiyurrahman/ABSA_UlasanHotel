@@ -118,10 +118,10 @@ def main():
     st.markdown("- **Aspek**: Fasilitas, Pelayanan, Masakan")
     st.markdown("- **Sentimen**: Positif atau Negatif")
     
-    # Tata letak input teks dan file sejajar secara horizontal
-    col1, col2 = st.columns(2)
+    # Menyediakan menu/tab untuk input teks atau file
+    tab1, tab2 = st.tabs(["Input Teks", "Upload File"])
     
-    with col1:
+    with tab1:
         st.subheader("Input Teks Tunggal")
         user_input = st.text_area("Masukkan Teks", "")
         if st.button("Prediksi Teks"):
@@ -141,7 +141,7 @@ def main():
                     st.write(f"**Aspek**: {predicted_aspect.capitalize()}")
                     st.write(f"**Sentimen**: {predicted_sentiment.capitalize()}")
     
-    with col2:
+    with tab2:
         st.subheader("Input File Excel")
         uploaded_file = st.file_uploader("Upload file Excel", type=["xlsx"])
     
