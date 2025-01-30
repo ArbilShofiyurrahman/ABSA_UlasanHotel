@@ -114,8 +114,8 @@ except Exception as e:
     st.stop()
 
 def main():
-    st.title("Sistem Prediksi Aspek dan Sentimen dengan Random Forest")
-    st.markdown("### Sistem ini memprediksi:")
+    st.title("Analisis Sentimen Berbasis Aspek Pada Ulasan Hotel")
+    st.markdown("### Sistem Memprediksi:")
     st.markdown("- **Aspek**: Fasilitas, Pelayanan, Masakan")
     st.markdown("- **Sentimen**: Positif atau Negatif")
     
