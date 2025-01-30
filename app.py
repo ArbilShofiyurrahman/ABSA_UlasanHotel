@@ -234,8 +234,8 @@ def main():
     # Footer
     st.markdown("---")
     st.caption("""
-    © 2023 Sistem Analisis Sentimen Hotel. Dibangun dengan Streamlit.  
-    Dikembangkan oleh [Nama Anda/Tim Anda].  
+    © 2025 Sistem Analisis Sentimen Hotel. Dibangun dengan Streamlit.  
+    Dikembangkan oleh [Arbil Shofiyurrahman].  
     **Teknologi yang Digunakan**: Python, Scikit-learn, TF-IDF, Random Forest.
     """)
 
