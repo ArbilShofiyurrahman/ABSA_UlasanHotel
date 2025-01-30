@@ -118,29 +118,33 @@ def main():
     st.markdown("- **Aspek**: Fasilitas, Pelayanan, Masakan")
     st.markdown("- **Sentimen**: Positif atau Negatif")
     
-    # Input teks
-    st.subheader("Input Teks Tunggal")
-    user_input = st.text_area("Masukkan Teks", "")
-    if st.button("Prediksi Teks"):
-        if not user_input:
-            st.warning("Masukkan teks terlebih dahulu.")
-        else:
-            processed_text = preprocess_text(user_input, stopword_model, stemmer_model)
-            aspect_vectorized = tfidf_aspek.transform([processed_text])
-            predicted_aspect = rf_aspek_model.predict(aspect_vectorized)[0]
-            
-            if predicted_aspect == "tidak_dikenali":
-                st.write("**Aspek**: Tidak Dikenali")
-                st.write("**Sentimen**: -")
+    # Tata letak input teks dan file sejajar secara horizontal
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader("Input Teks Tunggal")
+        user_input = st.text_area("Masukkan Teks", "")
+        if st.button("Prediksi Teks"):
+            if not user_input:
+                st.warning("Masukkan teks terlebih dahulu.")
             else:
-                sentiment_vectorized = tfidf_sentimen.transform([processed_text])
-                predicted_sentiment = rf_sentimen_model.predict(sentiment_vectorized)[0]
-                st.write(f"**Aspek**: {predicted_aspect.capitalize()}")
-                st.write(f"**Sentimen**: {predicted_sentiment.capitalize()}")
-
-    # Input File Excel
-    st.subheader("Input File Excel")
-    uploaded_file = st.file_uploader("Upload file Excel", type=["xlsx"])
+                processed_text = preprocess_text(user_input, stopword_model, stemmer_model)
+                aspect_vectorized = tfidf_aspek.transform([processed_text])
+                predicted_aspect = rf_aspek_model.predict(aspect_vectorized)[0]
+                
+                if predicted_aspect == "tidak_dikenali":
+                    st.write("**Aspek**: Tidak Dikenali")
+                    st.write("**Sentimen**: -")
+                else:
+                    sentiment_vectorized = tfidf_sentimen.transform([processed_text])
+                    predicted_sentiment = rf_sentimen_model.predict(sentiment_vectorized)[0]
+                    st.write(f"**Aspek**: {predicted_aspect.capitalize()}")
+                    st.write(f"**Sentimen**: {predicted_sentiment.capitalize()}")
+    
+    with col2:
+        st.subheader("Input File Excel")
+        uploaded_file = st.file_uploader("Upload file Excel", type=["xlsx"])
+    
     if uploaded_file is not None:
         try:
             df = pd.read_excel(uploaded_file)
