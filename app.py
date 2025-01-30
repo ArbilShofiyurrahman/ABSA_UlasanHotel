@@ -116,8 +116,18 @@ except Exception as e:
 def main():
     st.title("Analisis Sentimen Berbasis Aspek Pada Ulasan Hotel")
     st.markdown("### Sistem Memprediksi:")
-    st.markdown("- **Aspek**: Fasilitas, Pelayanan, Masakan")
-    st.markdown("- **Sentimen**: Positif atau Negatif")
+    st.sidebar.write("**Informasi Penting:**")
+    st.sidebar.write("""
+    Analisis sentimen terdapat 3 aspek:
+    1. Fasilitas
+    2. Pelayanan
+    3. Masakan
+    """)
+        st.sidebar.write("""
+    Sentimen yang dianalisis:
+    - Positif
+    - Negatif
+    """)
     
     # Menyediakan menu/tab untuk input teks atau file
     tab1, tab2 = st.tabs(["Input Teks", "Upload File"])
