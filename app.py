@@ -119,37 +119,16 @@ except Exception as e:
     st.error(f"Gagal memuat model atau vektorizer: {e}")
     st.stop()
 
+def plot_pie_chart(data, column, title):
+    counts = data[column].value_counts()
+    fig, ax = plt.subplots()
+    ax.pie(counts, labels=counts.index, autopct='%1.1f%%', colors=['#ff9999','#66b3ff','#99ff99','#ffcc99'])
+    ax.set_title(title)
+    st.pyplot(fig)
 
 def main():
     st.title("Sistem Prediksi Aspek dan Sentimen dengan Random Forest")
-    st.markdown("### Sistem ini memprediksi:\n- **Aspek**: Fasilitas, Pelayanan, Masakan\n- **Sentimen**: Positif atau Negatif")
     
-    # Input teks
-    st.subheader("Input Teks Tunggal")
-    user_input = st.text_area("Masukkan Teks", "")
-    if st.button("Prediksi Teks"):
-        if not user_input:
-            st.warning("Masukkan teks terlebih dahulu.")
-        else:
-            processed_text = preprocess_text(user_input, stopword_model, stemmer_model)
-            aspect_vectorized = tfidf_aspek.transform([processed_text])
-            predicted_aspect = rf_aspek_model.predict(aspect_vectorized)[0]
-            
-            if predicted_aspect == "tidak_dikenali":
-                st.write("**Aspek**: Tidak Dikenali")
-                st.write("**Sentimen**: -")
-            else:
-                sentiment_vectorized = tfidf_sentimen.transform([processed_text])
-                predicted_sentiment = rf_sentimen_model.predict(sentiment_vectorized)[0]
-                st.write(f"**Aspek**: {predicted_aspect.capitalize()}")
-                st.write(f"**Sentimen**: {predicted_sentiment.capitalize()}")
-                
-            # Tampilkan visualisasi sebelum download
-            st.subheader("Visualisasi Sentimen per Aspek")
-            create_wordcloud(pd.DataFrame({"ulasan": [user_input]}), 'ulasan')
-
-    # Input File Excel
-    st.subheader("Input File Excel")
     uploaded_file = st.file_uploader("Upload file Excel", type=["xlsx"])
     if uploaded_file is not None:
         try:
@@ -158,22 +137,10 @@ def main():
                 st.error("File Excel harus memiliki kolom 'ulasan'.")
                 return
             
-            # Reset results untuk file baru
-            for aspect in results:
-                if aspect != "Aspek Tidak Dikenali":
-                    results[aspect] = {"Positif": 0, "Negatif": 0}
-                else:
-                    results[aspect] = 0
-            
-            # Progress bar
-            progress_bar = st.progress(0)
-            status_text = st.empty()
-            
             df["Aspek"] = ""
             df["Sentimen"] = ""
-
-            # Proses setiap baris
-            total_rows = len(df)
+            
+            # Pemrosesan setiap ulasan
             for index, row in df.iterrows():
                 ulasan = str(row['ulasan'])
                 processed_text = preprocess_text(ulasan, stopword_model, stemmer_model)
@@ -188,24 +155,22 @@ def main():
                     predicted_sentiment = rf_sentimen_model.predict(sentiment_vectorized)[0]
                     df.at[index, "Aspek"] = predicted_aspect.capitalize()
                     df.at[index, "Sentimen"] = predicted_sentiment.capitalize()
-                
-                progress = (index + 1) / total_rows
-                progress_bar.progress(progress)
-                status_text.text(f'Memproses baris {index + 1} dari {total_rows}')
-
-            progress_bar.progress(100)
-            status_text.text('Pemrosesan selesai!')
-
-            # Tampilkan hasil analisis
-            st.subheader("Hasil Analisis")
+            
+            st.success("Prediksi selesai!")
+            
+            # Tampilkan hasil dalam DataFrame
+            st.subheader("Hasil Prediksi")
             st.dataframe(df)
             
-            # Tampilkan visualisasi terlebih dahulu sebelum download
-            st.subheader("Visualisasi Sentimen per Aspek")
-            create_wordcloud(df, 'ulasan')
+            # Plot Pie Chart untuk distribusi aspek
+            st.subheader("Distribusi Aspek")
+            plot_pie_chart(df, "Aspek", "Distribusi Prediksi Aspek")
             
-            # Download hasil lengkap
-            st.subheader("Download Hasil")
+            # Plot Pie Chart untuk distribusi sentimen
+            st.subheader("Distribusi Sentimen")
+            plot_pie_chart(df, "Sentimen", "Distribusi Prediksi Sentimen")
+            
+            # Download hasil analisis
             output = BytesIO()
             with pd.ExcelWriter(output, engine='openpyxl') as writer:
                 df.to_excel(writer, index=False, sheet_name='Hasil Prediksi')
@@ -217,11 +182,8 @@ def main():
                 file_name="hasil_analisis_file.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
-
         except Exception as e:
             st.error(f"Terjadi kesalahan saat memproses file Excel: {e}")
-
-
 
 if __name__ == "__main__":
     main()
