@@ -113,8 +113,8 @@ except Exception as e:
     st.stop()
 
 def main():
-    st.title("Sistem Prediksi Aspek dan Sentimen dengan Random Forest")
-    st.markdown("### Sistem ini memprediksi:")
+    st.title("Analisis Sentimen Berdasarkan Aspek Pada Ulasan Hotel")
+    st.markdown("### Sistem Memprediksi:")
     st.markdown("- **Aspek**: Fasilitas, Pelayanan, Masakan")
     st.markdown("- **Sentimen**: Positif atau Negatif")
     
@@ -142,15 +142,16 @@ def main():
                     st.write(f"**Sentimen**: {predicted_sentiment.capitalize()}")
     
     with tab2:
-        st.subheader("Input File Excel")
-        uploaded_file = st.file_uploader("Upload file Excel", type=["xlsx"])
-    
-    if uploaded_file is not None:
-        try:
+        st.subheader("Input File, Pastikan Terdapat Kolom (ulasan) ")
+       uploaded_file = st.file_uploader("Upload file CSV atau Excel", type=["csv", "xlsx"])
+
+if uploaded_file is not None:
+    try:
+        if uploaded_file.name.endswith(".csv"):
+            df = pd.read_csv(uploaded_file)
+        else:
             df = pd.read_excel(uploaded_file)
-            if 'ulasan' not in df.columns:
-                st.error("File Excel harus memiliki kolom 'ulasan'.")
-                return
+
             
             df["Aspek"] = ""
             df["Sentimen"] = ""
