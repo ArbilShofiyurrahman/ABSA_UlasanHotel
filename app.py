@@ -114,33 +114,33 @@ except Exception as e:
     st.stop()
 
 def main():
-    st.title("Analisis Sentimen Berdasarkan Aspek Pada Ulasan Hotel")
-    st.markdown("### Sistem Memprediksi:")
+    st.title("Sistem Prediksi Aspek dan Sentimen dengan Random Forest")
+    st.markdown("### Sistem ini memprediksi:")
     st.markdown("- **Aspek**: Fasilitas, Pelayanan, Masakan")
     st.markdown("- **Sentimen**: Positif atau Negatif")
     
     # Menyediakan menu/tab untuk input teks atau file
     tab1, tab2 = st.tabs(["Input Teks", "Upload File"])
     
-       with tab1:
-            st.subheader("Input Teks Tunggal")
-            user_input = st.text_area("Masukkan Teks", "kamar tidak jelek dan rapi")
-            if st.button("Prediksi Teks"):
-                if not user_input:
-                    st.warning("Masukkan teks terlebih dahulu.")
+    with tab1:
+        st.subheader("Input Teks Tunggal")
+        user_input = st.text_area("Masukkan Teks", "kamar tidak jelek dan rapi")
+        if st.button("Prediksi Teks"):
+            if not user_input:
+                st.warning("Masukkan teks terlebih dahulu.")
+            else:
+                processed_text = preprocess_text(user_input, stopword_model, stemmer_model)
+                aspect_vectorized = tfidf_aspek.transform([processed_text])
+                predicted_aspect = rf_aspek_model.predict(aspect_vectorized)[0]
+                
+                if predicted_aspect == "tidak_dikenali":
+                    st.write("**Aspek**: Tidak Dikenali")
+                    st.write("**Sentimen**: -")
                 else:
-                    processed_text = preprocess_text(user_input, stopword_model, stemmer_model)
-                    aspect_vectorized = tfidf_aspek.transform([processed_text])
-                    predicted_aspect = rf_aspek_model.predict(aspect_vectorized)[0]
-                    
-                    if predicted_aspect == "tidak_dikenali":
-                        st.write("**Aspek**: Tidak Dikenali")
-                        st.write("**Sentimen**: -")
-                    else:
-                        sentiment_vectorized = tfidf_sentimen.transform([processed_text])
-                        predicted_sentiment = rf_sentimen_model.predict(sentiment_vectorized)[0]
-                        st.write(f"**Aspek**: {predicted_aspect.capitalize()}")
-                        st.write(f"**Sentimen**: {predicted_sentiment.capitalize()}")
+                    sentiment_vectorized = tfidf_sentimen.transform([processed_text])
+                    predicted_sentiment = rf_sentimen_model.predict(sentiment_vectorized)[0]
+                    st.write(f"**Aspek**: {predicted_aspect.capitalize()}")
+                    st.write(f"**Sentimen**: {predicted_sentiment.capitalize()}")
     
     with tab2:
         st.subheader("Input File, Pastikan Terdapat Kolom (ulasan)")
@@ -156,7 +156,6 @@ def main():
             if 'ulasan' not in df.columns:
                 st.error("File harus memiliki kolom 'ulasan'.")
                 return
-
             
             df["Aspek"] = ""
             df["Sentimen"] = ""
@@ -211,7 +210,7 @@ def main():
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
         except Exception as e:
-            st.error(f"Terjadi kesalahan saat memproses file Excel: {e}")
+            st.error(f"Terjadi kesalahan saat memproses file: {e}")
 
 if __name__ == "__main__":
     main()
