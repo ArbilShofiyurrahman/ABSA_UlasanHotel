@@ -124,7 +124,7 @@ def main():
     
     with tab1:
         st.subheader("Input Teks Tunggal")
-        user_input = st.text_area("Masukkan Teks", "kamar tidak jelek dan rapi")
+        user_input = st.text_area("Masukkan Teks", placeholder="kamar tidak jelek dan rapi")
         if st.button("Prediksi Teks"):
             if not user_input:
                 st.warning("Masukkan teks terlebih dahulu.")
