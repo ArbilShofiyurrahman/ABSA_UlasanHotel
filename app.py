@@ -118,9 +118,9 @@ def main():
     **Sistem Memprediksi Sentimen Berdasarkan Aspek:**
 
     Aplikasi ini menganalisis sentimen dari ulasan hotel berdasarkan tiga aspek utama:
-    1. **Fasilitas**: Menganalisis kualitas dan kondisi fasilitas hotel seperti kamar, kolam renang, atau area umum.
-    2. **Pelayanan**: Mengevaluasi kualitas layanan yang diberikan oleh staf hotel, termasuk keramahan dan responsivitas.
-    3. **Masakan**: Menilai kualitas makanan yang disajikan di restoran hotel atau layanan room service.
+    1. **Fasilitas** 
+    2. **Pelayanan** 
+    3. **Masakan**
 
     Aplikasi ini menggunakan model machine learning untuk mengklasifikasikan sentimen ulasan menjadi **positif** atau **negatif** untuk setiap aspek.
     """)
@@ -129,9 +129,9 @@ def main():
     st.sidebar.title("Informasi Penting")
     st.sidebar.write("""
     **Aspek yang Dianalisis:**
-    1. Fasilitas
-    2. Pelayanan
-    3. Masakan
+    1. Fasilitas : Menganalisis kualitas dan kondisi fasilitas hotel seperti kamar, kolam renang, atau area umum.
+    2. Pelayanan : Mengevaluasi kualitas layanan yang diberikan oleh staf hotel, termasuk keramahan dan responsivitas.
+    3. Masakan   : Menilai kualitas makanan yang disajikan di restoran hotel atau layanan room service.
     """)
     st.sidebar.write("""
     **Sentimen yang Dianalisis:**
