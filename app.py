@@ -135,8 +135,8 @@ def main():
     """)
     st.sidebar.write("""
     **Sentimen yang Dianalisis:**
-     **Positif** : Ulasan yang mengandung kata-kata atau frasa yang menunjukkan kepuasan, pujian, atau pengalaman baik terhadap aspek tertentu (fasilitas, pelayanan, atau masakan).
-     **Negatif** : Ulasan yang mengandung kata-kata atau frasa yang menunjukkan ketidakpuasan, kritik, atau pengalaman buruk terhadap aspek tertentu (fasilitas, pelayanan, atau masakan).
+    1. Positif : Ulasan yang mengandung kata-kata atau frasa yang menunjukkan kepuasan, pujian, atau pengalaman baik terhadap aspek tertentu (fasilitas, pelayanan, atau masakan).
+    2. Negatif : Ulasan yang mengandung kata-kata atau frasa yang menunjukkan ketidakpuasan, kritik, atau pengalaman buruk terhadap aspek tertentu (fasilitas, pelayanan, atau masakan).
     """)
 
     # Menyediakan menu/tab untuk input teks atau file
