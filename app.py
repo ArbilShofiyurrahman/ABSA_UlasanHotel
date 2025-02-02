@@ -127,7 +127,7 @@ except Exception as e:
 if menu == "Dashboard":
     st.title("📊 Dashboard Analisis Sentimen")
     st.write("Selamat datang di sistem analisis sentimen berbasis aspek untuk ulasan hotel.")
-    st.image("dashboard_image.jpg", use_column_width=True)
+    # st.image("dashboard_image.jpg", use_column_width=True)
     st.markdown("""
     - **Fasilitas**: Kualitas kamar dan area umum.
     - **Pelayanan**: Keramahan dan responsivitas staf.
