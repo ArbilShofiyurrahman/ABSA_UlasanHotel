@@ -145,26 +145,22 @@ elif menu == "Analisis Data":
             st.dataframe(df.head())
 
             if 'ulasan' in df.columns:
-                df['Cleaned_Ulasan'] = df['Ulasan'].apply(lambda x: clean_text(str(x)))
+                df['cleaned_ulasan'] = df['ulasan'].apply(lambda x: clean_text(str(x)))
                 st.write("### Data Setelah Cleaning")
-                st.dataframe(df[['Ulasan', 'Cleaned_Ulasan']].head())
-
-                # Simpan ke Session State untuk digunakan di Report
+                st.dataframe(df[['ulasan', 'cleaned_ulasan']].head())
                 st.session_state['processed_data'] = df
             else:
-                st.error("Kolom 'Ulasan' tidak ditemukan dalam dataset.")
+                st.error("Kolom 'ulasan' tidak ditemukan dalam dataset.")
         except Exception as e:
             st.error(f"❌ Gagal memproses file: {e}")
 
-
-## Report
+# Report
 elif menu == "Report":
     st.title("📋 Report Hasil Analisis")
     if 'processed_data' in st.session_state:
         df = st.session_state['processed_data']
-        st.dataframe(df[['Ulasan', 'Cleaned_Ulasan']].head())
+        st.dataframe(df[['ulasan', 'cleaned_ulasan']].head())
 
-        # Unduh hasil analisis
         output = BytesIO()
         with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
             df.to_excel(writer, index=False, sheet_name='Hasil Analisis')
