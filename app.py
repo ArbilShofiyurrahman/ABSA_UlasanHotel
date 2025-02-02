@@ -5,29 +5,6 @@ import joblib
 import matplotlib.pyplot as plt
 import numpy as np
 from io import BytesIO
-# Load icons
-icons = {
-    "Dashboard": "📊",
-    "Analisis Data": "📑",
-    "Report": "📋",
-    "Testing": "🧪"
-}
-
-# Sidebar Navigation
-st.sidebar.title("Menu")
-st.sidebar.markdown(
-    """
-    <style>
-    div[data-testid="stSidebar"] .css-1d391kg {
-        font-size: 1.2em !important;
-        font-weight: bold !important;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-menu = st.sidebar.radio("Pilih Menu", list(icons.keys()), format_func=lambda x: f"{icons[x]} {x}")
-
 
 # Fungsi untuk membersihkan teks
 def clean_text(text):
@@ -134,73 +111,127 @@ except Exception as e:
     st.error(f"Gagal memuat model atau vektorizer: {e}")
     st.stop()
 
-# Dashboard
-if menu == "Dashboard":
-    st.title("📊 Analisis Sentimen")
-    st.write("Selamat datang di sistem analisis sentimen berbasis aspek untuk ulasan hotel.")
+def main():
+    # Deskripsi Aplikasi
+    st.title("Analisis Sentimen Berbasis Aspek pada Ulasan Hotel")
     st.markdown("""
+    *Sistem Memprediksi Sentimen Berdasarkan Aspek:*
+    Aplikasi ini menggunakan model machine learning untuk mengklasifikasikan sentimen ulasan menjadi *positif* atau *negatif* untuk setiap aspek.
+    """)
+
+    # Sidebar untuk Informasi Penting
+    st.sidebar.title("Informasi Penting")
+    st.sidebar.write("""
+    *Aspek yang Dianalisis:*
+    1. Fasilitas : Menganalisis kualitas dan kondisi fasilitas hotel seperti kamar, kolam renang, atau area umum.
+    2. Pelayanan : Mengevaluasi kualitas layanan yang diberikan oleh staf hotel, termasuk keramahan dan responsivitas.
+    3. Masakan   : Menilai kualitas makanan yang disajikan di restoran hotel atau layanan room service.
+    """)
+    st.sidebar.write("""
+    *Sentimen yang Dianalisis:*
     1. Positif : Ulasan yang mengandung kata-kata atau frasa yang menunjukkan kepuasan, pujian, atau pengalaman baik terhadap aspek tertentu (fasilitas, pelayanan, atau masakan).
     2. Negatif : Ulasan yang mengandung kata-kata atau frasa yang menunjukkan ketidakpuasan, kritik, atau pengalaman buruk terhadap aspek tertentu (fasilitas, pelayanan, atau masakan).
     """)
-   
 
-# Analisis Data
-elif menu == "Analisis Data":
-    st.title("📑 Analisis Data")
-    uploaded_file = st.file_uploader("Upload file CSV atau Excel", type=["csv", "xlsx"])
+    # Menyediakan menu/tab untuk input teks atau file
+    tab1, tab2 = st.tabs(["Input Teks", "Upload File"])
 
-    if uploaded_file:
-        try:
-            df = pd.read_csv(uploaded_file) if uploaded_file.name.endswith(".csv") else pd.read_excel(uploaded_file)
-            st.write("### Data Awal")
-            st.dataframe(df.head())
-
-            if 'ulasan' in df.columns:
-                df['cleaned_ulasan'] = df['ulasan'].apply(lambda x: clean_text(str(x)))
-                st.write("### Data Setelah Cleaning")
-                st.dataframe(df[['ulasan', 'cleaned_ulasan']].head())
-                st.session_state['processed_data'] = df
+    with tab1:
+        st.subheader("Input Teks Tunggal")
+        user_input = st.text_area("Masukkan Teks", placeholder="kamar tidak jelek dan rapi")
+        if st.button("Prediksi Teks"):
+            if not user_input:
+                st.warning("Masukkan teks terlebih dahulu.")
             else:
-                st.error("Kolom 'ulasan' tidak ditemukan dalam dataset.")
-        except Exception as e:
-            st.error(f"❌ Gagal memproses file: {e}")
-
-# Report
-elif menu == "Report":
-    st.title("📋 Report Hasil Analisis")
-    if 'processed_data' in st.session_state:
-        df = st.session_state['processed_data']
-        st.dataframe(df[['ulasan', 'cleaned_ulasan']].head())
-
-        output = BytesIO()
-        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-            df.to_excel(writer, index=False, sheet_name='Hasil Analisis')
-            writer.close()
-        output.seek(0)
-
-        st.download_button("⬇️ Download Hasil Analisis", data=output, file_name="Hasil_Analisis.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-    else:
-        st.warning("⚠️ Tidak ada data untuk ditampilkan. Silakan lakukan analisis terlebih dahulu.")
-
-# Testing
-elif menu == "Testing":
-    st.title("🧪 Pengujian Model")
-    user_input = st.text_area("Masukkan teks ulasan hotel")
-
-    if st.button("Prediksi"):
-        if user_input:
-            cleaned_text = clean_text(user_input)
-            normalized_text = normalize_negation(cleaned_text)
-            aspect_vectorized = tfidf_aspek.transform([normalized_text])
-            sentiment_vectorized = tfidf_sentimen.transform([normalized_text])
-
-            try:
+                processed_text = preprocess_text(user_input, stopword_model, stemmer_model)
+                aspect_vectorized = tfidf_aspek.transform([processed_text])
                 predicted_aspect = rf_aspek_model.predict(aspect_vectorized)[0]
-                predicted_sentiment = rf_sentimen_model.predict(sentiment_vectorized)[0]
 
-                st.success(f"**Aspek**: {predicted_aspect.capitalize()}")
-                st.success(f"**Sentimen**: {predicted_sentiment.capitalize()}")
+                if predicted_aspect == "tidak_dikenali":
+                    st.write("*Aspek*: Tidak Dikenali")
+                    st.write("*Sentimen*: -")
+                else:
+                    sentiment_vectorized = tfidf_sentimen.transform([processed_text])
+                    predicted_sentiment = rf_sentimen_model.predict(sentiment_vectorized)[0]
+                    st.write(f"*Aspek*: {predicted_aspect.capitalize()}")
+                    st.write(f"*Sentimen*: {predicted_sentiment.capitalize()}")
+
+    with tab2:
+        st.subheader("Input File, Pastikan Terdapat Kolom (ulasan)")
+        uploaded_file = st.file_uploader("Upload file CSV atau Excel", type=["csv", "xlsx"])
+
+        if uploaded_file is not None:
+            try:
+                if uploaded_file.name.endswith(".csv"):
+                    df = pd.read_csv(uploaded_file)
+                else:
+                    df = pd.read_excel(uploaded_file)
+
+                if 'ulasan' not in df.columns:
+                    st.error("File harus memiliki kolom 'ulasan'.")
+                else:
+                    df["Aspek"] = ""
+                    df["Sentimen"] = ""
+                    total_rows = len(df)
+
+                    for index, row in df.iterrows():
+                        ulasan = str(row['ulasan'])
+                        processed_text = preprocess_text(ulasan, stopword_model, stemmer_model)
+                        aspect_vectorized = tfidf_aspek.transform([processed_text])
+                        predicted_aspect = rf_aspek_model.predict(aspect_vectorized)[0]
+
+                        if predicted_aspect == "tidak_dikenali":
+                            df.at[index, "Aspek"] = "Tidak Dikenali"
+                            df.at[index, "Sentimen"] = "-"
+                        else:
+                            sentiment_vectorized = tfidf_sentimen.transform([processed_text])
+                            predicted_sentiment = rf_sentimen_model.predict(sentiment_vectorized)[0]
+                            df.at[index, "Aspek"] = predicted_aspect.capitalize()
+                            df.at[index, "Sentimen"] = predicted_sentiment.capitalize()
+
+                    # Visualisasi Pie Chart
+                    st.subheader("Visualisasi Sentimen per Aspek")
+                    fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+                    aspek_list = ["Fasilitas", "Pelayanan", "Masakan"]
+                    colors = ["#66b3ff", "#ff9999"]
+
+                    for i, aspek in enumerate(aspek_list):
+                        data = df[df['Aspek'] == aspek]['Sentimen'].value_counts()
+                        if not data.empty:
+                            axes[i].pie(data, labels=data.index, autopct='%1.1f%%', colors=colors, startangle=140)
+                            axes[i].set_title(f"Aspek {aspek}")
+                        else:
+                            axes[i].pie([1], labels=["Tidak Ada Data"], colors=["#d3d3d3"])
+                            axes[i].set_title(f"Aspek {aspek}")
+
+                    st.pyplot(fig)
+
+                    # Menampilkan DataFrame hasil prediksi
+                    st.subheader("Hasil Analisis")
+                    st.dataframe(df)
+
+                    # Download hasil
+                    output = BytesIO()
+                    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                        df.to_excel(writer, index=False, sheet_name='Hasil Prediksi')
+                    output.seek(0)
+
+                    st.download_button(
+                        label="📥 Download Hasil Lengkap (Excel)",
+                        data=output,
+                        file_name="hasil_analisis_file.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    )
             except Exception as e:
-                st.error(f"❌ Error dalam prediksi: {e}")
-        else:
-            st.warning("⚠️ Masukkan teks terlebih dahulu.")
+                st.error(f"Terjadi kesalahan saat memproses file: {e}")
+
+    # Footer
+    st.markdown("---")
+    st.caption("""
+    © 2025 Sistem Analisis Sentimen Hotel. Dibangun dengan Streamlit.  
+    Dikembangkan oleh [Arbil Shofiyurrahman].  
+    *Teknologi yang Digunakan*: Python, Scikit-learn, TF-IDF, Random Forest.
+    """)
+
+if _name_ == "_main_":
+    main()
