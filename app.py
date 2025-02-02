@@ -129,10 +129,10 @@ if menu == "Dashboard":
     st.write("Selamat datang di sistem analisis sentimen berbasis aspek untuk ulasan hotel.")
     # st.image("dashboard_image.jpg", use_column_width=True)
     st.markdown("""
-    - **Fasilitas**: Kualitas kamar dan area umum.
-    - **Pelayanan**: Keramahan dan responsivitas staf.
-    - **Masakan**: Kualitas makanan yang disajikan.
+    1. Positif : Ulasan yang mengandung kata-kata atau frasa yang menunjukkan kepuasan, pujian, atau pengalaman baik terhadap aspek tertentu (fasilitas, pelayanan, atau masakan).
+    2. Negatif : Ulasan yang mengandung kata-kata atau frasa yang menunjukkan ketidakpuasan, kritik, atau pengalaman buruk terhadap aspek tertentu (fasilitas, pelayanan, atau masakan).
     """)
+   
 
 # Analisis Data
 elif menu == "Analisis Data":
