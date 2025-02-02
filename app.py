@@ -15,6 +15,17 @@ icons = {
 
 # Sidebar Navigation
 st.sidebar.title("Menu")
+st.sidebar.markdown(
+    """
+    <style>
+    div[data-testid="stSidebar"] .css-1d391kg {
+        font-size: 1.2em !important;
+        font-weight: bold !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 menu = st.sidebar.radio("Pilih Menu", list(icons.keys()), format_func=lambda x: f"{icons[x]} {x}")
 
 
