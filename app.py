@@ -129,37 +129,72 @@ if menu == "Dashboard":
     st.write("Selamat datang di sistem analisis sentimen berbasis aspek untuk ulasan hotel.")
     st.image("dashboard_image.jpg", use_column_width=True)
     st.markdown("""
-    - **Fasilitas**: Menilai kualitas fasilitas hotel seperti kamar dan area umum.
-    - **Pelayanan**: Mengukur tingkat keramahan dan responsivitas staf.
-    - **Masakan**: Menganalisis kualitas makanan yang disajikan.
+    - **Fasilitas**: Kualitas kamar dan area umum.
+    - **Pelayanan**: Keramahan dan responsivitas staf.
+    - **Masakan**: Kualitas makanan yang disajikan.
     """)
 
 # Analisis Data
 elif menu == "Analisis Data":
     st.title("📑 Analisis Data")
     uploaded_file = st.file_uploader("Upload file CSV atau Excel", type=["csv", "xlsx"])
-    if uploaded_file is not None:
-        df = pd.read_csv(uploaded_file) if uploaded_file.name.endswith(".csv") else pd.read_excel(uploaded_file)
-        st.write("### Data Awal")
-        st.dataframe(df.head())
 
-# Report
+    if uploaded_file:
+        try:
+            df = pd.read_csv(uploaded_file) if uploaded_file.name.endswith(".csv") else pd.read_excel(uploaded_file)
+            st.write("### Data Awal")
+            st.dataframe(df.head())
+
+            if 'Ulasan' in df.columns:
+                df['Cleaned_Ulasan'] = df['Ulasan'].apply(lambda x: clean_text(str(x)))
+                st.write("### Data Setelah Cleaning")
+                st.dataframe(df[['Ulasan', 'Cleaned_Ulasan']].head())
+
+                # Simpan ke Session State untuk digunakan di Report
+                st.session_state['processed_data'] = df
+            else:
+                st.error("Kolom 'Ulasan' tidak ditemukan dalam dataset.")
+        except Exception as e:
+            st.error(f"❌ Gagal memproses file: {e}")
+
+
+## Report
 elif menu == "Report":
     st.title("📋 Report Hasil Analisis")
-    st.write("Lihat dan unduh hasil analisis dalam format Excel.")
+    if 'processed_data' in st.session_state:
+        df = st.session_state['processed_data']
+        st.dataframe(df[['Ulasan', 'Cleaned_Ulasan']].head())
+
+        # Unduh hasil analisis
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            df.to_excel(writer, index=False, sheet_name='Hasil Analisis')
+            writer.close()
+        output.seek(0)
+
+        st.download_button("⬇️ Download Hasil Analisis", data=output, file_name="Hasil_Analisis.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    else:
+        st.warning("⚠️ Tidak ada data untuk ditampilkan. Silakan lakukan analisis terlebih dahulu.")
 
 # Testing
 elif menu == "Testing":
     st.title("🧪 Pengujian Model")
     user_input = st.text_area("Masukkan teks ulasan hotel")
+
     if st.button("Prediksi"):
         if user_input:
-            processed_text = clean_text(user_input)
-            aspect_vectorized = tfidf_aspek.transform([processed_text])
-            predicted_aspect = rf_aspek_model.predict(aspect_vectorized)[0]
-            sentiment_vectorized = tfidf_sentimen.transform([processed_text])
-            predicted_sentiment = rf_sentimen_model.predict(sentiment_vectorized)[0]
-            st.write(f"**Aspek**: {predicted_aspect.capitalize()}")
-            st.write(f"**Sentimen**: {predicted_sentiment.capitalize()}")
+            cleaned_text = clean_text(user_input)
+            normalized_text = normalize_negation(cleaned_text)
+            aspect_vectorized = tfidf_aspek.transform([normalized_text])
+            sentiment_vectorized = tfidf_sentimen.transform([normalized_text])
+
+            try:
+                predicted_aspect = rf_aspek_model.predict(aspect_vectorized)[0]
+                predicted_sentiment = rf_sentimen_model.predict(sentiment_vectorized)[0]
+
+                st.success(f"**Aspek**: {predicted_aspect.capitalize()}")
+                st.success(f"**Sentimen**: {predicted_sentiment.capitalize()}")
+            except Exception as e:
+                st.error(f"❌ Error dalam prediksi: {e}")
         else:
-            st.warning("Masukkan teks terlebih dahulu.")
+            st.warning("⚠️ Masukkan teks terlebih dahulu.")
