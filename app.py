@@ -144,15 +144,15 @@ elif menu == "Analisis Data":
             st.write("### Data Awal")
             st.dataframe(df.head())
 
-            if 'Ulasan' in df.columns:
+            if 'ulasan' in df.columns:
                 df['Cleaned_Ulasan'] = df['Ulasan'].apply(lambda x: clean_text(str(x)))
                 st.write("### Data Setelah Cleaning")
-                st.dataframe(df[['Ulasan', 'Cleaned_Ulasan']].head())
+                st.dataframe(df[['ulasan', 'Cleaned_Ulasan']].head())
 
                 # Simpan ke Session State untuk digunakan di Report
                 st.session_state['processed_data'] = df
             else:
-                st.error("Kolom 'Ulasan' tidak ditemukan dalam dataset.")
+                st.error("Kolom 'ulasan' tidak ditemukan dalam dataset.")
         except Exception as e:
             st.error(f"❌ Gagal memproses file: {e}")
 
