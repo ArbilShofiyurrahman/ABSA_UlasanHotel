@@ -298,15 +298,15 @@ def preprocess_text(text):
 try:
     # Load TF-IDF vectorizers
     tfidf_aspek = joblib.load('tfidfAspek.joblib')
-    tfidf_fasilitas = joblib.load('tfidfFasilitas')
-    tfidf_pelayanan = joblib.load('tfidfPelayanan')
-    tfidf_masakan = joblib.load('tfidfMasakan')
+    tfidf_fasilitas = joblib.load('tfidfFasilitas.joblib')
+    tfidf_pelayanan = joblib.load('tfidfPelayanan.joblib')
+    tfidf_masakan = joblib.load('tfidfMasakan.joblib')
     
     # Load Random Forest models
-    rf_aspek_model = joblib.load('RandomForestAspekModel')
-    rf_fasilitas_model = joblib.load('RandomForestFasilitasModel')
-    rf_pelayanan_model = joblib.load('RandomForestPelayananModel')
-    rf_masakan_model = joblib.load('RandomForestMasakanModel')
+    rf_aspek_model = joblib.load('RandomForestAspekModel.joblib')
+    rf_fasilitas_model = joblib.load('RandomForestFasilitasModel.joblib')
+    rf_pelayanan_model = joblib.load('RandomForestPelayananModel.joblib')
+    rf_masakan_model = joblib.load('RandomForestMasakanModel.joblib')
 except Exception as e:
     st.error(f"Gagal memuat model atau vektorizer: {e}")
     st.stop()
