@@ -297,7 +297,7 @@ def preprocess_text(text):
 # Memuat Model
 try:
     # Load TF-IDF vectorizers
-    tfidf_aspek = joblib.load('tfidfAspek')
+    tfidf_aspek = joblib.load('https://github.com/ArbilShofiyurrahman/ABSA_UlasanHotel/blob/main/tfidfAspek.joblib')
     tfidf_fasilitas = joblib.load('tfidfFasilitas')
     tfidf_pelayanan = joblib.load('tfidfPelayanan')
     tfidf_masakan = joblib.load('tfidfMasakan')
