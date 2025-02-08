@@ -5,13 +5,21 @@ import joblib
 import matplotlib.pyplot as plt
 import numpy as np
 from io import BytesIO
+from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
+from Sastrawi.StopWordRemover.StopWordRemoverFactory import StopWordRemoverFactory
+
+# Initialize Sastrawi components
+stemmer_factory = StemmerFactory()
+stemmer = stemmer_factory.create_stemmer()
+stopword_factory = StopWordRemoverFactory()
+stopword_remover = stopword_factory.create_stop_word_remover()
 
 # Fungsi untuk membersihkan teks
 def clean_text(text):
     text = re.sub(r'[^a-zA-Z\s]', '', text)  # Menghapus angka dan karakter non-huruf
     return text
 
-# Fungsi Normalisasi (Contoh)
+# Fungsi Normalisasi
 def normalize_negation(text):
     negation_patterns = {
         r'\btidak bersih\b': 'kotor',
@@ -42,8 +50,12 @@ def normalize_negation(text):
         r'\btidak bertanggung jawab\b': 'tidakbertanggungjawab',
         r'\btidak wangi\b': 'bau',
         r'\btidak layak\b': 'tidaklayak',
+        r'\btidak bisa\b': 'tidakbisa',
+
         # Kata negasi diawali dengan "kurang"
         r'\bkurang bersih\b': 'kotor',
+        r'\bkurang baik\b': 'kurangbaik',
+        r'\bkurang lengkap\b': 'tidaklengkap',
         r'\bkurang memuaskan\b': 'tidakmemuaskan',
         r'\bkurang sopan\b': 'tidaksopan',
         r'\bkurang cepat\b': 'lambat',
@@ -57,59 +69,266 @@ def normalize_negation(text):
         r'\bkurang sigap\b': 'tidaksigap',
         r'\bkurang informatif\b': 'tidakinformatif',
         r'\bkurang sesuai ekspektasi\b': 'kecewa',
+        r'\bkurang teratur\b': 'berantakan',
+        r'\bkurang konsisten\b': 'tidakkonsisten',
+        r'\bkurang memadai\b': 'kurangmemadai',
+        r'\bkurang responsif\b': 'cuek',
+        r'\bkurang stabil\b': 'tidakstabil',
+        r'\bkurang membantu\b': 'tidakmembantu',
+        r'\bkurang wajar\b': 'aneh',
+        r'\bkurang aman\b': 'tidakaman',
+        r'\bkurang peduli\b': 'cuek',
+        r'\bkurang tepat waktu\b': 'tidaktepatwaktu',
+        r'\bkurang tanggap\b': 'tidaksigap',
+        r'\bkurang wangi\b': 'bau',
+        r'\bkurang layak\b': 'tidaklayak',
+        r'\bkurang enak\b': 'tidakenak',
+        r'\bkurang jujur\b': 'tidakjujur',
+        r'\bkurang bertanggung jawab\b': 'tidakbertanggungjawab',
+        r'\bkurang tepat\b': 'tidaktepat',
+        r'\bkurang informatif\b': 'tidakinformatif',
+        r'\bkurang terorganisir\b': 'asal',
+        r'\bkurang detail\b': 'tidakdetail',
+        r'\bkurang memenuhi harapan\b': 'kecewa',
+
         # Slang dan typo
+        r'\bg layak\b': 'tidaklayak',
+        r'\bgk layak\b': 'tidaklayak',
+        r'\bgak layak\b': 'tidaklayak',
+        r'\btdk layak\b': 'tidaklayak',
+        r'\bkurg layak\b': 'tidaklayak',
+        r'\bkrg layak\b': 'tidaklayak',
         r'\btdk bersih\b': 'kotor',
+        r'\bg bersih\b': 'kotor',
+        r'\bga bersih\b': 'kotor',
+        r'\bgk bersih\b': 'kotor',
+        r'\bgak bersih\b': 'kotor',
+        r'\btdk bersih\b': 'kotor',
+        r'\bkurg bersih\b': 'kotor',
+        r'\btdk lengkap\b': 'tidaklengkap',
+        r'\btdk lgkp\b': 'tidaklengkap',
+        r'\btidak lgkp\b': 'tidaklengkap',
+        r'\bg lengkap\b': 'tidaklengkap',
+        r'\bga lengkap\b': 'tidaklengkap',
+        r'\bgak lengkap\b': 'tidaklengkap',
+        r'\bgk lengkap\b': 'tidaklengkap',
+        r'\bkurg lengkap\b': 'tidaklengkap',
+        r'\bg sesuai\b': 'gasesuai',
+        r'\bga sesuai\b': 'gasesuai',
+        r'\bgak sesuai\b': 'gasesuai',
+        r'\bgk sesuai\b': 'gasesuai',
+        r'\btdk sesuai\b': 'gasesuai',
+        r'\bkurg sesuai\b': 'gasesuai',
         r'\btdk cepat\b': 'lambat',
+        r'\bga cepat\b': 'lambat',
+        r'\bgak cepat\b': 'lambat',
+        r'\bgk cepat\b': 'lambat',
+        r'\bkurg cepat\b': 'lambat',
         r'\btdk nyaman\b': 'tidaknyaman',
+        r'\bgk nyaman\b': 'tidaknyaman',
+        r'\bgak nyaman\b': 'tidaknyaman',
+        r'\bg nyaman\b': 'tidaknyaman',
+        r'\bgkurg nyaman\b': 'tidaknyaman',
         r'\btdk ramah\b': 'tidakramah',
+        r'\bga ramah\b': 'tidakramah',
+        r'\bgak ramah\b': 'tidakramah',
+        r'\bgk ramah\b': 'tidakramah',
+        r'\bkrg ramah\b': 'tidakramah',
+        r'\bkurg ramah\b': 'tidakramah',
         r'\bg enak\b': 'tidakenak',
+        r'\bga enak\b': 'tidakenak',
+        r'\bgk enak\b': 'tidakenak',
+        r'\bgak enak\b': 'tidakenak',
+        r'\btdk enak\b': 'tidakenak',
+        r'\bkurg enak\b': 'tidakenak',
+        r'\bkrg enak\b': 'tidakenak',
         r'\bg aman\b': 'tidakaman',
+        r'\bga aman\b': 'tidakaman',
+        r'\bgak aman\b': 'tidakaman',
+        r'\bgk aman\b': 'tidakaman',
+        r'\btdk aman\b': 'tidakaman',
+        r'\bkurg aman\b': 'tidakaman',
+        r'\bkrg aman\b': 'tidakaman',
         r'\bg sopan\b': 'tidaksopan',
+        r'\bga sopan\b': 'tidaksopan',
+        r'\bgak sopan\b': 'tidaksopan',
+        r'\bgk sopan\b': 'tidaksopan',
+        r'\btdk sopan\b': 'tidaksopan',
+        r'\bkurg sopan\b': 'tidaksopan',
+        r'\bkrg sopan\b': 'tidaksopan',
         r'\bg stabil\b': 'tidakstabil',
-        r'\btdk rapi\b': 'berantakan',
+        r'\bga stabil\b': 'tidakstabil',
+        r'\bgak stabil\b': 'tidakstabil',
+        r'\bgk stabil\b': 'tidakstabil',
+        r'\btdk stabil\b': 'tidakstabil',
+        r'\bkurg stabil\b': 'tidakstabil',
+        r'\bkrg stabil\b': 'tidakstabil',
         r'\bg rapi\b': 'berantakan',
+        r'\bga rapi\b': 'berantakan',
+        r'\bgak rapi\b': 'berantakan',
+        r'\bgk rapi\b': 'berantakan',
+        r'\btdk rapi\b': 'berantakan',
+        r'\bkurg rapi\b': 'berantakan',
+        r'\bkrg rapi\b': 'berantakan',
+        r'\bg profesional\b': 'tidakprofesional',
+        r'\bga profesional\b': 'tidakprofesional',
+        r'\bgak profesional\b': 'tidakprofesional',
+        r'\bgk profesional\b': 'tidakprofesional',
+        r'\btdk profesional\b': 'tidakprofesional',
+        r'\bkurg profesional\b': 'tidakprofesional',
+        r'\bkrg profesional\b': 'tidakprofesional',
+        r'\bg efisien\b': 'tidakefisien',
+        r'\bga efisien\b': 'tidakefisien',
+        r'\bgak efisien\b': 'tidakefisien',
+        r'\bgk efisien\b': 'tidakefisien',
+        r'\btdk efisien\b': 'tidakefisien',
+        r'\bkurg efisien\b': 'tidakefisien',
+        r'\bkrg efisien\b': 'tidakefisien',
+        r'\btdk konsisten\b': 'tidakkonsisten',
+        r'\bgak konsisten\b': 'tidakkonsisten',
+        r'\bgk konsisten\b': 'tidakkonsisten',
+        r'\bg konsisten\b': 'tidakkonsisten',
+        r'\btdk matang\b': 'tidakmatang',
+        r'\bg matang\b': 'tidakmatang',
+        r'\bgak matang\b': 'tidakmatang',
+        r'\bgk matang\b': 'tidakmatang',
+        r'\bga matang\b': 'tidakmatang',
+        r'\bkurg matang\b': 'tidakmatang',
+        r'\bkrg matang\b': 'tidakmatang',
+        r'\btdk membantu\b': 'tidakmembantu',
+        r'\bg membantu\b': 'tidakmembantu',
+        r'\bga membantu\b': 'tidakmembantu',
+        r'\bgak membantu\b': 'tidakmembantu',
+        r'\bgk membantu\b': 'tidakmembantu',
+        r'\bkurg membantu\b': 'tidakmembantu',
+        r'\bkrg membantu\b': 'tidakmembantu',
+        r'\btdk wajar\b': 'aneh',
+        r'\bg wajar\b': 'aneh',
+        r'\bga wajar\b': 'aneh',
+        r'\bgak wajar\b': 'aneh',
+        r'\bgk wajar\b': 'aneh',
+        r'\btdk wajar\b': 'aneh',
+        r'\bkrg wajar\b': 'aneh',
+        r'\bkurg wajar\b': 'aneh',
+        r'\btdk peduli\b': 'cuek',
+        r'\bg peduli\b': 'cuek',
+        r'\bga peduli\b': 'cuek',
+        r'\bgak peduli\b': 'cuek',
+        r'\bgk peduli\b': 'cuek',
+        r'\btdk peduli\b': 'cuek',
+        r'\bkurg peduli\b': 'cuek',
+        r'\bkrg peduli\b': 'cuek',
+        r'\btdk terawat\b': 'tidakterawat',
+        r'\bg terawat\b': 'tidakterawat',
+        r'\bgak terawat\b': 'tidakterawat',
+        r'\bgk terawat\b': 'tidakterawat',
+        r'\bkurg terawat\b': 'tidakterawat',
+        r'\bkrg terawat\b': 'tidakterawat',
+        r'\bkrg jujur\b': 'tidakjujur',
+        r'\bga jujur\b': 'tidakjujur',
+        r'\bgak jujur\b': 'tidakjujur',
+        r'\bgk jujur\b': 'tidakjujur',
+        r'\bg jujur\b': 'tidakjujur',
+        r'\btdk jujur\b': 'tidakjujur',
+        r'\bg ada\b': 'tidakada',
+        r'\bga ada\b': 'tidakada',
+        r'\bgak ada\b': 'tidakada',
+        r'\bgk ada\b': 'tidakada',
+        r'\btdk ada\b': 'tidakada',
+        r'\bg bisa\b': 'tidakbisa',
+        r'\bga bisa\b': 'tidakbisa',
+        r'\bgk bisa\b': 'tidakbisa',
+        r'\bgabisa\b': 'tidakbisa',
+        r'\btdkbisa\b': 'tidakbisa',
+
         # Frase tambahan sesuai konteks ulasan
         r'\btidak dilayani\b': 'cuek',
         r'\btdk dilayani\b': 'cuek',
-        r'\btdk sesuai\b': 'kecewa',
-        r'\btidak sesuai\b': 'kecewa',
-        r'\btidak diprioritaskan\b': 'diabaikan',
-        r'\btidak sesuai ekspektasi\b': 'kecewa',
-        r'\btidak jujur\b': 'tidakjujur',
-        r'\btdk jujur\b': 'tidakjujur',
-        r'\btidak menepati janji\b': 'tidakjujur',
-        r'\bkurang tanggung jawab\b': 'tidakbertanggungjawab',
         r'\bkurang perhatian\b': 'cuek',
-        r'\bkurang detail\b': 'tidakdetail',
-        r'\bkurang terorganisir\b': 'asal-asalan',
-        r'\btidak terlaksana dengan baik\b': 'berantakan',
+        r'\btdk sesuai\b': 'kecewa',
         r'\btidak memenuhi harapan\b': 'kecewa',
-        r'\btidak jelek\b': 'bagus'
+        r'\btdk memenuhi harapan\b': 'kecewa',
+        r'\bg memenuhi harapan\b': 'kecewa',
+        r'\btidak sesuai ekspektasi\b': 'kecewa',
+        r'\btidak sesuai\b': 'kecewa',
+        r'\bkurang terorganisir\b': 'asal',
+        r'\bkrg terorganisir\b': 'asal',
+        r'\bkrg terorganisir\b': 'asal',
+        r'\bkurang tanggung jawab\b': 'tidakbertanggungjawab',
+         r'\bkrg bertanggung jawab\b': 'tidakbertanggungjawab',
+        r'\bkurang detail\b': 'tidakdetail',
+        r'\bkrg detail\b': 'tidakdetail',
+        r'\bkrg wangi\b': 'bau',
+        r'\btdk wangi\b': 'bau',
+        r'\bkrg tepat\b': 'tidaktepat',
+        r'\bkrg informatif\b': 'tidakinformatif',
+        r'\bkrg detail\b': 'tidakdetail',
+        r'\bkamar\b': 'kmarmandi'
     }
     for pattern, replacement in negation_patterns.items():
         text = re.sub(pattern, replacement, text)
     return text
 
 # Fungsi Preprocessing
-def preprocess_text(text, stopword_model, stemmer_model):
-    text = text.lower()  # Casefolding
+def preprocess_text(text):
+    # Casefolding
+    text = text.lower()
+    
+    # Cleaning
     text = clean_text(text)
-    text = normalize_negation(text)  # Normalisasi
-    text = stopword_model.remove(text)  # Stopword Removal
-    text = stemmer_model.stem(text)  # Stemming
-    return text
+    
+    # Normalisasi
+    text = normalize_negation(text)
+    
+    # Stopword Removal
+    text = stopword_remover.remove(text)
+    
+    # Tokenisasi (split into words)
+    tokens = text.split()
+    
+    # Stemming using Porter Stemmer
+    stemmed_tokens = [stemmer.stem(token) for token in tokens]
+    
+    # Join back to text
+    processed_text = ' '.join(stemmed_tokens)
+    
+    return processed_text
 
 # Memuat Model
 try:
-    stopword_model = joblib.load('stopword_remover_model.pkl')
-    stemmer_model = joblib.load('stemmer_model.pkl')
-    tfidf_aspek = joblib.load('tfidf_aspek.pkl')
-    tfidf_sentimen = joblib.load('tfidf_sentimen.pkl')
-    rf_aspek_model = joblib.load('rf_aspek_model.pkl')
-    rf_sentimen_model = joblib.load('rf_sentimen_model.pkl')
+    # Load TF-IDF vectorizers
+    tfidf_aspek = joblib.load('tfidfAspek')
+    tfidf_fasilitas = joblib.load('tfidfFasilitas')
+    tfidf_pelayanan = joblib.load('tfidfPelayanan')
+    tfidf_masakan = joblib.load('tfidfMasakan')
+    
+    # Load Random Forest models
+    rf_aspek_model = joblib.load('RandomForestAspekModel')
+    rf_fasilitas_model = joblib.load('RandomForestFasilitasModel')
+    rf_pelayanan_model = joblib.load('RandomForestPelayananModel')
+    rf_masakan_model = joblib.load('RandomForestMasakanModel')
 except Exception as e:
     st.error(f"Gagal memuat model atau vektorizer: {e}")
     st.stop()
+
+def predict_sentiment(text, aspect):
+    # Select appropriate model and vectorizer based on aspect
+    if aspect == "Fasilitas":
+        vectorizer = tfidf_fasilitas
+        model = rf_fasilitas_model
+    elif aspect == "Pelayanan":
+        vectorizer = tfidf_pelayanan
+        model = rf_pelayanan_model
+    elif aspect == "Masakan":
+        vectorizer = tfidf_masakan
+        model = rf_masakan_model
+    else:
+        return "-"
+    
+    # Transform text and predict
+    text_vectorized = vectorizer.transform([text])
+    sentiment = model.predict(text_vectorized)[0]
+    return sentiment.capitalize()
 
 def main():
     # Deskripsi Aplikasi
@@ -129,8 +348,8 @@ def main():
     """)
     st.sidebar.write("""
     *Sentimen yang Dianalisis:*
-    1. Positif : Ulasan yang mengandung kata-kata atau frasa yang menunjukkan kepuasan, pujian, atau pengalaman baik terhadap aspek tertentu (fasilitas, pelayanan, atau masakan).
-    2. Negatif : Ulasan yang mengandung kata-kata atau frasa yang menunjukkan ketidakpuasan, kritik, atau pengalaman buruk terhadap aspek tertentu (fasilitas, pelayanan, atau masakan).
+    1. Positif : Ulasan yang mengandung kata-kata atau frasa yang menunjukkan kepuasan, pujian, atau pengalaman baik.
+    2. Negatif : Ulasan yang mengandung kata-kata atau frasa yang menunjukkan ketidakpuasan, kritik, atau pengalaman buruk.
     """)
 
     # Menyediakan menu/tab untuk input teks atau file
@@ -143,18 +362,21 @@ def main():
             if not user_input:
                 st.warning("Masukkan teks terlebih dahulu.")
             else:
-                processed_text = preprocess_text(user_input, stopword_model, stemmer_model)
+                # Preprocess text
+                processed_text = preprocess_text(user_input)
+                
+                # Predict aspect
                 aspect_vectorized = tfidf_aspek.transform([processed_text])
                 predicted_aspect = rf_aspek_model.predict(aspect_vectorized)[0]
-
+                
                 if predicted_aspect == "tidak_dikenali":
                     st.write("*Aspek*: Tidak Dikenali")
                     st.write("*Sentimen*: -")
                 else:
-                    sentiment_vectorized = tfidf_sentimen.transform([processed_text])
-                    predicted_sentiment = rf_sentimen_model.predict(sentiment_vectorized)[0]
+                    # Predict sentiment based on aspect
+                    predicted_sentiment = predict_sentiment(processed_text, predicted_aspect.capitalize())
                     st.write(f"*Aspek*: {predicted_aspect.capitalize()}")
-                    st.write(f"*Sentimen*: {predicted_sentiment.capitalize()}")
+                    st.write(f"*Sentimen*: {predicted_sentiment}")
 
     with tab2:
         st.subheader("Input File, Pastikan Terdapat Kolom (ulasan)")
@@ -176,7 +398,9 @@ def main():
 
                     for index, row in df.iterrows():
                         ulasan = str(row['ulasan'])
-                        processed_text = preprocess_text(ulasan, stopword_model, stemmer_model)
+                        processed_text = preprocess_text(ulasan)
+                        
+                        # Predict aspect
                         aspect_vectorized = tfidf_aspek.transform([processed_text])
                         predicted_aspect = rf_aspek_model.predict(aspect_vectorized)[0]
 
@@ -184,10 +408,10 @@ def main():
                             df.at[index, "Aspek"] = "Tidak Dikenali"
                             df.at[index, "Sentimen"] = "-"
                         else:
-                            sentiment_vectorized = tfidf_sentimen.transform([processed_text])
-                            predicted_sentiment = rf_sentimen_model.predict(sentiment_vectorized)[0]
+                            # Predict sentiment based on aspect
+                            predicted_sentiment = predict_sentiment(processed_text, predicted_aspect.capitalize())
                             df.at[index, "Aspek"] = predicted_aspect.capitalize()
-                            df.at[index, "Sentimen"] = predicted_sentiment.capitalize()
+                            df.at[index, "Sentimen"] = predicted_sentiment
 
                     # Visualisasi Pie Chart
                     st.subheader("Visualisasi Sentimen per Aspek")
