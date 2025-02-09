@@ -453,7 +453,7 @@ def main():
     st.markdown("---")
     st.caption("""
     © 2025 Sistem Analisis Sentimen Hotel. Dibangun dengan Streamlit.  
-    Dikembangkan oleh [Arbil Shofiyurrahman].  
+    Dikembangkan oleh Arbil Shofiyurrahman.  
     *Teknologi yang Digunakan*: Python, Scikit-learn, TF-IDF, Random Forest.
     """)
 
